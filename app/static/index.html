@@ -1,327 +1,355 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Repository Search</title>
     <style>
+        :root {
+            color-scheme: light;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
             min-height: 100vh;
-            padding: 20px;
+            background: radial-gradient(circle at top, rgba(99, 102, 241, 0.24), transparent 25%),
+                        radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.16), transparent 20%),
+                        linear-gradient(180deg, #020617 0%, #0f172a 100%);
+            padding: 24px;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1080px;
             margin: 0 auto;
+            display: grid;
+            gap: 24px;
         }
 
         header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
+            display: grid;
+            gap: 16px;
+            padding: 32px 28px;
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 24px;
+            box-shadow: 0 24px 80px rgba(15, 23, 42, 0.42);
+            backdrop-filter: blur(16px);
         }
 
         h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            margin: 0;
+            font-size: clamp(2.2rem, 3vw, 3rem);
+            letter-spacing: -0.04em;
         }
 
         .subtitle {
-            font-size: 1.1em;
-            opacity: 0.9;
+            margin: 0;
+            line-height: 1.75;
+            max-width: 780px;
+            color: #cbd5e1;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        .hero-pill {
+            background: rgba(148, 163, 184, 0.12);
+            color: #cbd5e1;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-weight: 500;
         }
 
         .search-box {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            margin-bottom: 30px;
+            background: rgba(15, 23, 42, 0.92);
+            padding: 28px;
+            border-radius: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            box-shadow: 0 16px 60px rgba(15, 23, 42, 0.34);
+            display: grid;
+            gap: 20px;
         }
 
         .search-form {
             display: grid;
-            gap: 15px;
+            gap: 18px;
         }
 
-        .form-row {
+        .field-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
         }
 
-        .form-row.full {
-            grid-column: 1 / -1;
+        .field-grid.wide {
+            grid-template-columns: 1fr;
         }
 
         .form-group {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            gap: 10px;
         }
 
         label {
+            font-size: 0.95rem;
+            color: #cbd5e1;
             font-weight: 600;
-            margin-bottom: 8px;
-            color: #333;
-            font-size: 0.95em;
         }
 
-        input[type="text"],
-        input[type="number"],
-        input[type="date"],
+        input,
         select {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s;
-            font-family: inherit;
-        }
-
-        input[type="text"]:focus,
-        input[type="number"]:focus,
-        input[type="date"]:focus,
-        select:focus {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(148, 163, 184, 0.04);
+            color: #f8fafc;
+            padding: 14px 16px;
+            font-size: 1rem;
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transition: border-color 0.3s ease, background 0.3s ease;
         }
 
-        input[type="text"]::placeholder {
-            color: #999;
+        input:focus,
+        select:focus {
+            border-color: rgba(96, 165, 250, 0.9);
+            background: rgba(148, 163, 184, 0.08);
         }
 
-        .button-group {
+        input::placeholder {
+            color: rgba(226, 232, 240, 0.65);
+        }
+
+        .buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 10px;
+            gap: 16px;
         }
 
         button {
-            padding: 12px 24px;
             border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 14px 20px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .btn-search {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            background: linear-gradient(135deg, #4753ff 0%, #8b5cf6 100%);
+            box-shadow: 0 18px 40px rgba(71, 83, 255, 0.22);
         }
 
         .btn-search:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-search:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+        .btn-clear {
+            background: rgba(148, 163, 184, 0.12);
+            color: #cbd5e1;
         }
 
-        .btn-reset {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .btn-reset:hover {
-            background: #e0e0e0;
+        .btn-clear:hover {
+            background: rgba(148, 163, 184, 0.18);
         }
 
         .loading {
-            text-align: center;
-            padding: 20px;
-            color: #667eea;
             display: none;
+            gap: 14px;
+            padding: 18px 0;
+            align-items: center;
+            justify-content: center;
+            color: #60a5fa;
+            font-weight: 600;
         }
 
         .spinner {
-            border: 4px solid #f0f0f0;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            width: 36px;
+            height: 36px;
+            border: 5px solid rgba(96, 165, 250, 0.22);
+            border-top-color: #60a5fa;
+            border-radius: 999px;
+            animation: spin 0.9s linear infinite;
         }
 
         .error {
-            background: #fee;
-            color: #c33;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
             display: none;
+            background: rgba(248, 113, 113, 0.12);
+            color: #fecaca;
+            border: 1px solid rgba(248, 113, 113, 0.25);
+            border-radius: 14px;
+            padding: 16px 18px;
+            font-weight: 600;
         }
 
         .results {
             display: none;
+            gap: 18px;
         }
 
-        .result-header {
-            color: white;
-            margin-bottom: 20px;
+        .result-panel {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 70px rgba(15, 23, 42, 0.28);
         }
 
-        .result-header h2 {
-            font-size: 1.5em;
-            margin-bottom: 5px;
+        .result-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
         }
 
-        .result-stats {
-            font-size: 0.95em;
-            opacity: 0.9;
+        .result-heading h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #f8fafc;
+        }
+
+        .result-meta {
+            color: #94a3b8;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            font-size: 0.95rem;
         }
 
         .repo-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s;
-        }
-
-        .repo-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            background: #0f172a;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 12px 36px rgba(15, 23, 42, 0.22);
+            display: grid;
+            gap: 16px;
         }
 
         .repo-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 10px;
-        }
-
-        .repo-name {
-            flex: 1;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
         }
 
         .repo-title {
             margin: 0;
-            color: #667eea;
+            color: #e2e8f0;
+            font-size: 1.15rem;
             text-decoration: none;
-            font-size: 1.2em;
-            cursor: pointer;
         }
 
         .repo-title:hover {
             text-decoration: underline;
         }
 
-        .repo-owner {
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 3px;
+        .repo-description {
+            margin: 0;
+            color: #cbd5e1;
+            line-height: 1.7;
         }
 
         .repo-score {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            white-space: nowrap;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
             color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9em;
-        }
-
-        .repo-description {
-            color: #555;
-            margin: 12px 0;
-            line-height: 1.4;
+            font-weight: 700;
+            font-size: 0.94rem;
         }
 
         .repo-meta {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #eee;
+            gap: 12px;
         }
 
         .meta-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: #666;
-            font-size: 0.9em;
+            gap: 10px;
+            color: #94a3b8;
+            font-size: 0.95rem;
         }
 
         .meta-icon {
-            width: 18px;
-            height: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.12);
+            color: #cbd5e1;
+            font-size: 0.95rem;
         }
 
         .repo-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
+            gap: 10px;
         }
 
         .tag {
-            background: #f0f0f0;
-            color: #666;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.85em;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.1);
+            color: #cbd5e1;
+            font-size: 0.85rem;
         }
 
         .no-results {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 22px;
+            padding: 28px;
             text-align: center;
-            color: #666;
+            color: #cbd5e1;
         }
 
-        .no-results h3 {
-            color: #333;
-            margin-bottom: 10px;
+        .footer {
+            text-align: center;
+            padding: 24px 0;
+            color: #94a3b8;
+            font-size: 0.95rem;
         }
 
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.8em;
-            }
-
-            .form-row {
+        @media (max-width: 880px) {
+            .field-grid {
                 grid-template-columns: 1fr;
             }
 
-            .button-group {
+            .buttons {
                 grid-template-columns: 1fr;
             }
+        }
 
-            .repo-header {
-                flex-direction: column;
+        @media (max-width: 640px) {
+            body {
+                padding: 16px;
             }
 
-            .repo-score {
-                align-self: flex-start;
-                margin-top: 8px;
+            .search-box,
+            .result-panel,
+            header {
+                padding: 22px;
             }
 
             .repo-meta {
@@ -333,178 +361,182 @@
 <body>
     <div class="container">
         <header>
-            <h1>🔍 GitHub Repository Search</h1>
-            <p class="subtitle">Powered by AI-driven natural language search</p>
+            <div>
+                <h1>GitHub Repository Search</h1>
+                <p class="subtitle">Search GitHub repositories with natural language and get results ranked by popularity, recency, and completeness.</p>
+            </div>
+            <div class="hero-meta">
+                <span class="hero-pill">FastAPI backend</span>
+                <span class="hero-pill">AI parsing + fallback</span>
+                <span class="hero-pill">GitHub Search API</span>
+                <span class="hero-pill">Redis cache ready</span>
+            </div>
         </header>
 
-        <div class="search-box">
+        <section class="search-box">
             <div class="error" id="error"></div>
-
             <form class="search-form" id="searchForm">
-                <div class="form-row full">
+                <div class="field-grid wide">
                     <div class="form-group">
-                        <label for="query">Search Query *</label>
-                        <input type="text" id="query" name="query" placeholder="e.g., best beginner python chatbot project" required>
+                        <label for="query">Search query</label>
+                        <input id="query" name="query" type="text" placeholder="e.g. best beginner python chatbot project" required>
                     </div>
                 </div>
-
-                <div class="form-row">
+                <div class="field-grid">
                     <div class="form-group">
-                        <label for="language">Language (Optional)</label>
-                        <input type="text" id="language" name="language" placeholder="e.g., python, javascript">
+                        <label for="language">Language (optional)</label>
+                        <input id="language" name="language" type="text" placeholder="python, javascript, go...">
                     </div>
                     <div class="form-group">
-                        <label for="minStars">Minimum Stars (Optional)</label>
-                        <input type="number" id="minStars" name="minStars" placeholder="e.g., 100" min="0">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="pushedAfter">Pushed After (Optional)</label>
-                        <input type="date" id="pushedAfter" name="pushedAfter">
-                    </div>
-                    <div class="form-group">
-                        <label for="topK">Results to Return</label>
-                        <input type="number" id="topK" name="topK" value="10" min="1" max="30">
+                        <label for="minStars">Minimum stars (optional)</label>
+                        <input id="minStars" name="minStars" type="number" min="0" placeholder="100">
                     </div>
                 </div>
-
-                <div class="button-group">
-                    <button type="submit" class="btn-search" id="searchBtn">Search</button>
-                    <button type="reset" class="btn-reset">Clear</button>
+                <div class="field-grid">
+                    <div class="form-group">
+                        <label for="pushedAfter">Pushed after (optional)</label>
+                        <input id="pushedAfter" name="pushedAfter" type="date">
+                    </div>
+                    <div class="form-group">
+                        <label for="topK">Results to return</label>
+                        <input id="topK" name="topK" type="number" min="1" max="30" value="10">
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button type="submit" class="btn-search" id="searchBtn">Search repositories</button>
+                    <button type="reset" class="btn-clear">Reset</button>
                 </div>
             </form>
-
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>Searching repositories...</p>
+                <span>Running search...</span>
             </div>
-        </div>
+        </section>
 
-        <div class="results" id="results">
-            <div class="result-header">
-                <h2 id="resultTitle">Search Results</h2>
-                <div class="result-stats">
-                    Query: <strong id="queryDisplay"></strong> | Found: <strong id="foundCount">0</strong> repositories
+        <section class="results" id="results">
+            <div class="result-panel">
+                <div class="result-heading">
+                    <h2>Search results</h2>
+                    <div class="result-meta" id="resultStats"></div>
                 </div>
+                <div id="resultsList"></div>
             </div>
-            <div id="resultsList"></div>
-        </div>
+        </section>
+
+        <footer class="footer">
+            API endpoint: <code>/api/v1/search/repositories</code> · Powered by FastAPI and GitHub Search.
+        </footer>
     </div>
 
     <script>
         const form = document.getElementById('searchForm');
         const loading = document.getElementById('loading');
         const error = document.getElementById('error');
-        const results = document.getElementById('results');
+        const resultsSection = document.getElementById('results');
         const resultsList = document.getElementById('resultsList');
+        const resultStats = document.getElementById('resultStats');
         const searchBtn = document.getElementById('searchBtn');
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await performSearch();
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            await searchRepositories();
         });
 
-        async function performSearch() {
-            const query = document.getElementById('query').value;
-            if (!query.trim()) {
-                showError('Please enter a search query');
+        async function searchRepositories() {
+            const query = document.getElementById('query').value.trim();
+            if (!query) {
+                showError('Please enter a search query.');
                 return;
             }
 
-            const language = document.getElementById('language').value || null;
-            const minStars = parseInt(document.getElementById('minStars').value) || null;
-            const pushedAfter = document.getElementById('pushedAfter').value || null;
-            const topK = parseInt(document.getElementById('topK').value) || 10;
-
             const payload = {
                 query,
-                top_k: topK,
-                ...(language && { language }),
-                ...(minStars && { min_stars: minStars }),
-                ...(pushedAfter && { pushed_after: pushedAfter })
+                top_k: parseInt(document.getElementById('topK').value, 10) || 10,
             };
 
+            const language = document.getElementById('language').value.trim();
+            const minStars = document.getElementById('minStars').value;
+            const pushedAfter = document.getElementById('pushedAfter').value;
+
+            if (language) payload.language = language;
+            if (minStars) payload.min_stars = Number(minStars);
+            if (pushedAfter) payload.pushed_after = pushedAfter;
+
             hideError();
-            loading.style.display = 'block';
-            results.style.display = 'none';
+            resultsSection.style.display = 'none';
+            resultsList.innerHTML = '';
+            resultStats.textContent = '';
+            loading.style.display = 'flex';
             searchBtn.disabled = true;
 
             try {
                 const response = await fetch('/api/v1/search/repositories', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error?.message || `HTTP ${response.status}`);
+                    const body = await response.json().catch(() => null);
+                    throw new Error(body?.error?.message || `HTTP ${response.status}`);
                 }
 
                 const data = await response.json();
-                displayResults(data);
+                renderResults(data);
             } catch (err) {
-                showError(`Error: ${err.message}`);
+                showError(err.message);
             } finally {
                 loading.style.display = 'none';
                 searchBtn.disabled = false;
             }
         }
 
-        function displayResults(data) {
-            document.getElementById('queryDisplay').textContent = data.original_query;
-            document.getElementById('foundCount').textContent = data.total_found;
+        function renderResults(data) {
+            const parsed = data.parsed_query;
+            const parsedFields = [
+                `query: ${parsed.query}`,
+                parsed.language ? `language: ${parsed.language}` : null,
+                parsed.min_stars ? `min_stars: ${parsed.min_stars}` : null,
+                parsed.pushed_after ? `pushed_after: ${parsed.pushed_after}` : null,
+            ].filter(Boolean).join(' · ');
 
-            if (data.results.length === 0) {
-                resultsList.innerHTML = '<div class="no-results"><h3>No repositories found</h3><p>Try adjusting your search criteria</p></div>';
-            } else {
-                resultsList.innerHTML = data.results.map(repo => `
-                    <div class="repo-card">
-                        <div class="repo-header">
-                            <div class="repo-name">
-                                <a href="${repo.html_url}" target="_blank" class="repo-title">${escapeHtml(repo.name)}</a>
-                                <div class="repo-owner">by ${escapeHtml(repo.owner_login)}</div>
-                            </div>
-                            <div class="repo-score">${(repo.score * 100).toFixed(1)}%</div>
-                        </div>
-                        ${repo.description ? `<p class="repo-description">${escapeHtml(repo.description)}</p>` : ''}
-                        <div class="repo-meta">
-                            <div class="meta-item">
-                                <span class="meta-icon">⭐</span>
-                                <span>${repo.stargazers_count.toLocaleString()} stars</span>
-                            </div>
-                            ${repo.forks_count ? `
-                            <div class="meta-item">
-                                <span class="meta-icon">🔀</span>
-                                <span>${repo.forks_count.toLocaleString()} forks</span>
-                            </div>
-                            ` : ''}
-                            ${repo.language ? `
-                            <div class="meta-item">
-                                <span class="meta-icon">💻</span>
-                                <span>${escapeHtml(repo.language)}</span>
-                            </div>
-                            ` : ''}
-                            ${repo.pushed_at ? `
-                            <div class="meta-item">
-                                <span class="meta-icon">📅</span>
-                                <span>${new Date(repo.pushed_at).toLocaleDateString()}</span>
-                            </div>
-                            ` : ''}
-                        </div>
-                        ${repo.topics && repo.topics.length > 0 ? `
-                        <div class="repo-tags">
-                            ${repo.topics.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
-                        </div>
-                        ` : ''}
+            resultStats.textContent = `${data.total_found} repos found · ${data.duration_ms} ms · ${data.cached ? 'cached' : 'fresh'}\n${parsedFields}`;
+            resultStats.style.whiteSpace = 'pre-wrap';
+
+            if (!data.results.length) {
+                resultsList.innerHTML = `
+                    <div class="no-results">
+                        <h3>No repositories found</h3>
+                        <p>Try a broader query or remove filters.</p>
                     </div>
-                `).join('');
+                `;
+            } else {
+                resultsList.innerHTML = data.results.map(cardHtml).join('');
             }
 
-            results.style.display = 'block';
-            results.scrollIntoView({ behavior: 'smooth' });
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function cardHtml(repo) {
+            return `
+                <article class="repo-card">
+                    <div class="repo-header">
+                        <div>
+                            <a href="${escape(repo.html_url)}" target="_blank" rel="noopener noreferrer" class="repo-title">${escape(repo.full_name)}</a>
+                            <p class="repo-description">${escape(repo.description || 'No description available.')}</p>
+                        </div>
+                        <div class="repo-score">${Math.round(repo.score * 100)}%</div>
+                    </div>
+                    <div class="repo-meta">
+                        <div class="meta-item"><span class="meta-icon">⭐</span>${repo.stargazers_count.toLocaleString()} stars</div>
+                        <div class="meta-item"><span class="meta-icon">🔀</span>${repo.forks_count.toLocaleString()} forks</div>
+                        <div class="meta-item"><span class="meta-icon">🕒</span>${repo.pushed_at ? new Date(repo.pushed_at).toLocaleDateString() : 'Unknown'}</div>
+                        ${repo.language ? `<div class="meta-item"><span class="meta-icon">💻</span>${escape(repo.language)}</div>` : ''}
+                    </div>
+                    ${repo.topics && repo.topics.length ? `<div class="repo-tags">${repo.topics.map(tag => `<span class="tag">${escape(tag)}</span>`).join('')}</div>` : ''}
+                </article>
+            `;
         }
 
         function showError(message) {
@@ -516,15 +548,13 @@
             error.style.display = 'none';
         }
 
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, m => map[m]);
+        function escape(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
     </script>
 </body>

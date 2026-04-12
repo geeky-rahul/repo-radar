@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     app_port: int = 8000
     app_debug: bool = False
     log_level: str = "INFO"
+    cors_origins: list[str] = []
 
     # Gemini
     gemini_api_key: str = ""
