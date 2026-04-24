@@ -44,13 +44,13 @@ POST /api/v1/search/repositories
   [Query Agent]  LangChain LCEL: ChatPromptTemplate | ChatGoogleGenerativeAI | PydanticOutputParser
         │  failure → fallback_parse_query (rule-based)
         ▼
-  [Override merge] user-supplied language/min_stars/pushed_after win
+  [Override merge] user-supplied language/min_stars/pushed_after/fork/archived/topic/license win
         │
         ▼
   [GitHub Tool]  async httpx → api.github.com/search/repositories
-        │        qualifiers: stars:>=N language:X pushed:>=date sort=stars
+        │        qualifiers: stars:>=N language:X pushed:>=date fork:true/false archived:true/false topic:xyz license:MIT sort=stars
         ▼
-  [Ranking]  composite score = 0.6·stars + 0.2·recency + 0.2·completeness
+  [Ranking]  composite score = 0.45·stars + 0.18·recency + 0.15·completeness + 0.10·activity + 0.08·health + 0.04·trend
         │
         ▼
   [Cache write]  Redis SETEX (TTL configurable)
@@ -102,10 +102,14 @@ uvicorn app.main:app --reload
 ```json
 {
   "query": "best beginner python chatbot project",
-  "language": "python",       // optional override
-  "min_stars": 200,           // optional override
-  "pushed_after": "2024-01-01", // optional override (YYYY-MM-DD)
-  "top_k": 10                 // 1–30, default 10
+  "language": "python",           // optional override
+  "min_stars": 200,               // optional override
+  "pushed_after": "2024-01-01",   // optional override (YYYY-MM-DD)
+  "fork": false,                  // optional override — exclude forks
+  "archived": false,              // optional override — exclude archived repos
+  "topic": "cli",                 // optional override — filter by topic
+  "license": "MIT",               // optional override — filter by license
+  "top_k": 10                     // 1–30, default 10
 }
 ```
 
@@ -117,7 +121,11 @@ uvicorn app.main:app --reload
     "query": "chatbot beginner",
     "language": "python",
     "min_stars": 500,
-    "pushed_after": null
+    "pushed_after": null,
+    "fork": null,
+    "archived": false,
+    "topic": null,
+    "license": null
   },
   "total_found": 10,
   "results": [
@@ -131,6 +139,8 @@ uvicorn app.main:app --reload
       "forks_count": 3200,
       "language": "Python",
       "pushed_at": "2024-03-10T12:00:00Z",
+      "created_at": "2015-01-01T00:00:00Z",
+      "archived": false,
       "topics": ["chatbot", "machine-learning", "python"],
       "license_name": "BSD-3-Clause",
       "owner_login": "gunthercox",
@@ -165,20 +175,26 @@ uvicorn app.main:app --reload
 Each repository receives a composite score in `[0, 1]`:
 
 ```
-score = 0.6 × stars_score + 0.2 × recency_score + 0.2 × completeness_score
+score = 0.45·stars + 0.18·recency + 0.15·completeness + 0.10·activity + 0.08·health + 0.04·trend
 ```
 
 | Component | Method |
 |-----------|--------|
 | `stars_score` | `log1p(stars) / log1p(200_000)` — log-normalised, capped at 200k |
 | `recency_score` | `exp(-days_since_push / 730)` — exponential decay over ~2 years |
-| `completeness_score` | Bonus for: description (+0.5), topics (+0.25), license (+0.15), language (+0.10) |
+| `completeness_score` | Bonus for: description (+0.45), topics (+0.20), license (+0.15), language (+0.10), owner (+0.10) |
+| `activity_score` | Combines recency and fork adoption to estimate contributor engagement |
+| `health_score` | Community health from issue pressure and CI/CD workflow presence |
+| `trend_score` | Estimates momentum via stars per day over repository lifetime |
 
 Weights are configurable via environment variables:
 ```
-RANKING_STARS_WEIGHT=0.6
-RANKING_RECENCY_WEIGHT=0.2
-RANKING_COMPLETENESS_WEIGHT=0.2
+RANKING_STARS_WEIGHT=0.45
+RANKING_RECENCY_WEIGHT=0.18
+RANKING_COMPLETENESS_WEIGHT=0.15
+RANKING_ACTIVITY_WEIGHT=0.10
+RANKING_HEALTH_WEIGHT=0.08
+RANKING_TREND_WEIGHT=0.04
 ```
 
 ---
@@ -196,6 +212,12 @@ RANKING_COMPLETENESS_WEIGHT=0.2
 | `CACHE_ENABLED` | `true` | Disable for testing |
 | `GITHUB_SEARCH_MAX_RESULTS` | `10` | Max repos fetched per request |
 | `GITHUB_REQUEST_TIMEOUT` | `10.0` | HTTP timeout in seconds |
+| `RANKING_STARS_WEIGHT` | `0.45` | Star count influence |
+| `RANKING_RECENCY_WEIGHT` | `0.18` | Last push date influence |
+| `RANKING_COMPLETENESS_WEIGHT` | `0.15` | Metadata completeness influence |
+| `RANKING_ACTIVITY_WEIGHT` | `0.10` | Contributor activity influence |
+| `RANKING_HEALTH_WEIGHT` | `0.08` | Community health influence |
+| `RANKING_TREND_WEIGHT` | `0.04` | Star velocity influence |
 | `LOG_LEVEL` | `INFO` | `DEBUG` / `INFO` / `WARNING` / `ERROR` |
 | `APP_ENV` | `development` | Set to `development` for local runs (pretty logs) |
 
