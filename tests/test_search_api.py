@@ -134,6 +134,24 @@ class TestSearchEndpoint:
         # Parsed query reflects the override
         assert response.json()["parsed_query"]["language"] == "rust"
 
+    def test_advanced_qualifier_overrides_applied(self, client, mock_search_pipeline):
+        response = client.post(
+            "/api/v1/search/repositories",
+            json={
+                "query": "python service",
+                "fork": False,
+                "archived": True,
+                "topic": "cli",
+                "license": "MIT",
+            },
+        )
+        assert response.status_code == 200
+        parsed = response.json()["parsed_query"]
+        assert parsed["fork"] is False
+        assert parsed["archived"] is True
+        assert parsed["topic"] == "cli"
+        assert parsed["license"] == "MIT"
+
     def test_github_error_returns_502(self, client):
         from app.core.exceptions import GitHubAPIError
 

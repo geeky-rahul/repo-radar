@@ -7,7 +7,15 @@ from __future__ import annotations
 import pytest
 
 from app.schemas.search import RepositoryItem
-from app.services.ranking import rank_repositories, _stars_score, _recency_score, _completeness_score
+from app.services.ranking import (
+    _stars_score,
+    _recency_score,
+    _completeness_score,
+    _contributor_activity_score,
+    _community_health_score,
+    _trend_score,
+    rank_repositories,
+)
 
 
 def _make_repo(**kwargs) -> RepositoryItem:
@@ -70,7 +78,7 @@ class TestRecencyScore:
 class TestCompletenessScore:
     def test_empty_repo(self):
         repo = _make_repo()
-        assert _completeness_score(repo) == 0.0
+        assert _completeness_score(repo) == 0.1
 
     def test_full_metadata(self):
         repo = _make_repo(
@@ -84,7 +92,54 @@ class TestCompletenessScore:
 
     def test_only_description(self):
         repo = _make_repo(description="Short desc here for testing purposes")
-        assert _completeness_score(repo) == 0.5
+        assert _completeness_score(repo) == 0.55
+
+
+class TestContributorActivityScore:
+    def test_recent_repo_with_forks_scored_high(self):
+        from datetime import datetime, timezone
+
+        today = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        repo = _make_repo(pushed_at=today, forks_count=500)
+
+        score = _contributor_activity_score(repo)
+
+        assert 0.0 < score <= 1.0
+        assert score > 0.3
+
+    def test_archived_repo_has_no_activity(self):
+        repo = _make_repo(archived=True, pushed_at="2024-01-01T00:00:00Z", forks_count=1000)
+        assert _contributor_activity_score(repo) == 0.0
+
+
+class TestCommunityHealthScore:
+    def test_low_open_issues_and_ci_have_good_health(self):
+        repo = _make_repo(open_issues_count=5, topics=["github-actions", "python"])
+        score = _community_health_score(repo)
+
+        assert 0.5 < score <= 1.0
+
+    def test_many_open_issues_penalized(self):
+        repo = _make_repo(open_issues_count=200)
+        assert _community_health_score(repo) < 0.5
+
+    def test_archived_repo_has_no_health(self):
+        repo = _make_repo(archived=True, open_issues_count=0, topics=["ci"])
+        assert _community_health_score(repo) == 0.0
+
+
+class TestTrendScore:
+    def test_new_repo_with_stars_is_trending(self):
+        from datetime import datetime, timezone, timedelta
+
+        created = (datetime.now(tz=timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        repo = _make_repo(created_at=created, stargazers_count=300)
+
+        assert _trend_score(repo) > 0.0
+
+    def test_old_repo_has_lower_trend(self):
+        repo = _make_repo(created_at="2010-01-01T00:00:00Z", stargazers_count=1000)
+        assert _trend_score(repo) < 0.2
 
 
 class TestRankRepositories:

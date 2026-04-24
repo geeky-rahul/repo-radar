@@ -12,6 +12,10 @@ class SearchRequest(BaseModel):
     language: Optional[str] = Field(None, description="Filter by programming language")
     min_stars: Optional[int] = Field(None, ge=0, description="Minimum star count override")
     pushed_after: Optional[str] = Field(None, description="Only repos pushed after this date (YYYY-MM-DD)")
+    fork: Optional[bool] = Field(None, description="Include forks when true, exclude forks when false")
+    archived: Optional[bool] = Field(None, description="Include archived repos when true, exclude when false")
+    topic: Optional[str] = Field(None, description="Filter by repository topic")
+    license: Optional[str] = Field(None, description="Filter by repository license identifier")
     top_k: int = Field(10, ge=1, le=30, description="Number of results to return")
 
 
@@ -27,6 +31,10 @@ class ParsedGitHubQuery(BaseModel):
         None,
         description="ISO date string YYYY-MM-DD — only set when recency is explicitly implied",
     )
+    fork: Optional[bool] = Field(None, description="Include forks when true, exclude forks when false")
+    archived: Optional[bool] = Field(None, description="Include archived repos when true, exclude when false")
+    topic: Optional[str] = Field(None, description="Filter by repository topic")
+    license: Optional[str] = Field(None, description="Filter by repository license identifier")
 
     @field_validator("pushed_after")
     @classmethod
@@ -56,6 +64,7 @@ class RepositoryItem(BaseModel):
     created_at: Optional[str] = None
     topics: list[str] = Field(default_factory=list)
     license_name: Optional[str] = None
+    archived: bool = False
     owner_login: str
     owner_avatar_url: Optional[str] = None
     score: float = 0.0  # computed ranking score

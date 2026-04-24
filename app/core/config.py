@@ -38,9 +38,12 @@ class Settings(BaseSettings):
     llm_max_tokens: int = 512
 
     # Ranking weights
-    ranking_stars_weight: float = 0.6
-    ranking_recency_weight: float = 0.2
-    ranking_completeness_weight: float = 0.2
+    ranking_stars_weight: float = 0.45
+    ranking_recency_weight: float = 0.18
+    ranking_completeness_weight: float = 0.15
+    ranking_activity_weight: float = 0.10
+    ranking_health_weight: float = 0.08
+    ranking_trend_weight: float = 0.04
 
 
 @lru_cache(maxsize=1)

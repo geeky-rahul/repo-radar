@@ -33,6 +33,26 @@ def _build_github_query(parsed: ParsedGitHubQuery) -> str:
     if parsed.pushed_after:
         parts.append(f"pushed:>={parsed.pushed_after}")
 
+    if parsed.fork is True:
+        parts.append("fork:true")
+    elif parsed.fork is False:
+        parts.append("fork:false")
+
+    if parsed.archived is True:
+        parts.append("archived:true")
+    elif parsed.archived is False:
+        parts.append("archived:false")
+
+    if parsed.topic:
+        topic_value = parsed.topic.strip()
+        if topic_value:
+            parts.append(f"topic:{topic_value}")
+
+    if parsed.license:
+        license_value = parsed.license.strip()
+        if license_value:
+            parts.append(f"license:{license_value}")
+
     return " ".join(parts)
 
 
@@ -53,6 +73,7 @@ def _parse_repository(raw: dict[str, Any]) -> RepositoryItem:
         created_at=raw.get("created_at"),
         topics=raw.get("topics", []),
         license_name=license_info.get("name"),
+        archived=raw.get("archived", False),
         owner_login=owner.get("login", ""),
         owner_avatar_url=owner.get("avatar_url"),
     )

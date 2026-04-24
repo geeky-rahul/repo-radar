@@ -36,6 +36,14 @@ def _apply_overrides(parsed: ParsedGitHubQuery, request: SearchRequest) -> Parse
         overrides["min_stars"] = request.min_stars
     if request.pushed_after is not None:
         overrides["pushed_after"] = request.pushed_after
+    if request.fork is not None:
+        overrides["fork"] = request.fork
+    if request.archived is not None:
+        overrides["archived"] = request.archived
+    if request.topic is not None:
+        overrides["topic"] = request.topic
+    if request.license is not None:
+        overrides["license"] = request.license
     if overrides:
         return parsed.model_copy(update=overrides)
     return parsed

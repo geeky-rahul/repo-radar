@@ -41,7 +41,17 @@ _RECENCY_SIGNALS: set[str] = {
 
 def fallback_parse_query(user_query: str) -> ParsedGitHubQuery:
     lower = user_query.lower()
-    tokens = re.findall(r"[a-z0-9#+]+", lower)
+    qualifier_cleaned = re.sub(
+        r"\b(topic|license)\s*:\s*[a-z0-9_.-]+\b",
+        "",
+        lower,
+    )
+    qualifier_cleaned = re.sub(
+        r"\b(fork|archived)\s*:\s*(true|false)\b",
+        "",
+        qualifier_cleaned,
+    )
+    tokens = re.findall(r"[a-z0-9#+]+", qualifier_cleaned)
 
     # Detect language — use word-boundary matching to avoid false positives
     # e.g. "r" should not match "library" or "react"
@@ -69,6 +79,36 @@ def fallback_parse_query(user_query: str) -> ParsedGitHubQuery:
             pushed_after = f"{year}-01-01"
             break
 
+    # Detect explicit qualifiers
+    fork: bool | None = None
+    archived: bool | None = None
+    topic: str | None = None
+    license_value: str | None = None
+
+    fork_match = re.search(r"fork\s*:\s*(true|false)", lower)
+    if fork_match:
+        fork = fork_match.group(1) == "true"
+    elif "exclude forks" in lower or "no forks" in lower:
+        fork = False
+    elif "include forks" in lower or "forked repos" in lower:
+        fork = True
+
+    archived_match = re.search(r"archived\s*:\s*(true|false)", lower)
+    if archived_match:
+        archived = archived_match.group(1) == "true"
+    elif "exclude archived" in lower or "not archived" in lower:
+        archived = False
+    elif "archived repos" in lower or "archived" in lower:
+        archived = True
+
+    topic_match = re.search(r"topic\s*:\s*([a-z0-9_.-]+)", lower)
+    if topic_match:
+        topic = topic_match.group(1)
+
+    license_match = re.search(r"license\s*:\s*([a-z0-9+.-]+)", lower)
+    if license_match:
+        license_value = license_match.group(1).upper()
+
     # Build clean keyword query
     stop: set[str] = _FILLER_WORDS | set(_LANGUAGES) | set(_STAR_SIGNALS.keys()) | _RECENCY_SIGNALS
     keywords = [t for t in tokens if t not in stop and len(t) > 1]
@@ -79,4 +119,8 @@ def fallback_parse_query(user_query: str) -> ParsedGitHubQuery:
         language=detected_language,
         min_stars=min_stars,
         pushed_after=pushed_after,
+        fork=fork,
+        archived=archived,
+        topic=topic,
+        license=license_value,
     )

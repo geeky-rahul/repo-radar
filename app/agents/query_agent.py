@@ -29,6 +29,10 @@ Rules:
 - `language`: programming language if clearly mentioned or implied, else null
 - `min_stars`: infer from intent: "popular"→1000, "beginner"→100, "best"→500, otherwise 0
 - `pushed_after`: only set when user asks for "recent", "new", "latest" repos (use YYYY-01-01 of current year); else null
+- `fork`: true when forks should be included, false when they should be excluded, else null
+- `archived`: true when archived repos should be included, false when they should be excluded, else null
+- `topic`: set to a single topic slug when the query explicitly requests a repository topic, else null
+- `license`: set to a license identifier when the query explicitly requests a license, else null
 
 {format_instructions}
 """
