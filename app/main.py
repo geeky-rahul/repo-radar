@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1 import health, search
+from app.api.v1.users import router as users_router
 from app.core.config import get_settings
 from app.core.exceptions import AppBaseException
 from app.core.logging import configure_logging, get_logger
@@ -96,6 +97,7 @@ def create_app() -> FastAPI:
     # Routers
     app.include_router(health.router, prefix="/api/v1", tags=["health"])
     app.include_router(search.router, prefix="/api/v1", tags=["search"])
+    app.include_router(users_router, prefix="/api/v1", tags=["users"])
 
     # Static files
     static_dir = Path(__file__).parent / "static"

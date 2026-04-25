@@ -4,7 +4,7 @@ Accepts a ParsedGitHubQuery and returns a list of raw RepositoryItem objects.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -146,3 +146,37 @@ async def search_github_repositories(
             returned=len(items),
         )
         return items
+
+
+async def get_github_user_info(github_token: str) -> dict[str, Any]:
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {github_token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    async with httpx.AsyncClient(timeout=get_settings().github_request_timeout) as client:
+        response = await client.get("https://api.github.com/user", headers=headers)
+    if response.status_code != 200:
+        raise GitHubAPIError(
+            "Unable to fetch GitHub user info",
+            {"status_code": response.status_code, "body": response.text[:500]},
+        )
+    return response.json()
+
+
+async def get_user_starred_repositories(github_token: str, per_page: int = 20) -> list[RepositoryItem]:
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {github_token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    params = {"per_page": per_page, "page": 1}
+    async with httpx.AsyncClient(timeout=get_settings().github_request_timeout) as client:
+        response = await client.get("https://api.github.com/user/starred", headers=headers, params=params)
+    if response.status_code != 200:
+        raise GitHubAPIError(
+            "Unable to fetch starred repositories",
+            {"status_code": response.status_code, "body": response.text[:500]},
+        )
+    data = response.json()
+    return [_parse_repository(repo) for repo in data]

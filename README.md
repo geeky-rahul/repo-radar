@@ -162,6 +162,23 @@ uvicorn app.main:app --reload
 | 502 | `GITHUB_API_ERROR` | GitHub API returned an error |
 | 500 | `INTERNAL_ERROR` | Unexpected server error |
 
+### User account features
+
+Authentication is handled with Google sign-in and bearer sessions.
+
+- `POST /api/v1/users/auth/google` — authenticate with a Google ID token, optionally attach a GitHub token for personalization
+- `GET /api/v1/users/me` — retrieve the user profile
+- `GET /api/v1/users/favorites` — list favorite repositories
+- `POST /api/v1/users/favorites` — add a repository to favorites
+- `DELETE /api/v1/users/favorites/{repo_id}` — remove a favorite
+- `GET /api/v1/users/saved-searches` — list saved searches
+- `POST /api/v1/users/saved-searches` — save a search query
+- `GET /api/v1/users/collections` — list repository collections
+- `POST /api/v1/users/collections` — create a new collection
+- `GET /api/v1/users/recommendations` — personalized feed derived from starred repos and saved searches
+
+Use the header: `Authorization: Bearer <access_token>`
+
 ### `GET /api/v1/health`
 
 ```json
@@ -205,6 +222,7 @@ RANKING_TREND_WEIGHT=0.04
 |----------|---------|-------------|
 | `GEMINI_API_KEY` | — | Required for LLM query parsing |
 | `GITHUB_TOKEN` | — | Recommended (raises rate limit 10x) |
+| `GOOGLE_OAUTH_CLIENT_ID` | — | Required to verify Google sign-in tokens |
 | `LLM_MODEL` | `gemini-1.5-flash` | Gemini model for query parsing |
 | `LLM_TEMPERATURE` | `0.0` | Deterministic LLM output |
 | `REDIS_URL` | `redis://localhost:6379` | Cache backend |

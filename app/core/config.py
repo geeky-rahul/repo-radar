@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.0
     llm_max_tokens: int = 512
 
+    # Google
+    google_oauth_client_id: str = ""
+
     # Ranking weights
     ranking_stars_weight: float = 0.45
     ranking_recency_weight: float = 0.18
