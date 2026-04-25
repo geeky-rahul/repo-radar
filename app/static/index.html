@@ -756,6 +756,7 @@
         const resultStats = document.getElementById('resultStats');
         const searchBtn = document.getElementById('searchBtn');
         const signInBtn = document.getElementById('signInBtn');
+        window.dashboardRepoCache = window.dashboardRepoCache || {};
 
         signInBtn.addEventListener('click', async () => {
             try {
@@ -918,6 +919,15 @@
             const footer = document.querySelector('.footer');
             footer.insertAdjacentHTML('beforebegin', dashboardHtml);
 
+            // Hide the sign in button after login
+            if (signInBtn) {
+                signInBtn.style.display = 'none';
+            }
+            const authControls = document.querySelector('.auth-controls');
+            if (authControls) {
+                authControls.style.display = 'none';
+            }
+
             // Load user data
             await loadDashboardData(token);
 
@@ -1079,7 +1089,9 @@
                     <h3>${data.total_found} repositories found in ${data.duration_ms}ms</h3>
                 </div>
                 <div class="search-results">
-                    ${data.results.map(repo => `
+                    ${data.results.map(repo => {
+                window.dashboardRepoCache[repo.id] = repo;
+                return `
                         <div class="repo-card">
                             <div class="repo-header">
                                 <div>
@@ -1094,19 +1106,25 @@
                                 <span>💻 ${repo.language || 'N/A'}</span>
                             </div>
                             <div class="repo-actions">
-                                <button class="btn-small" onclick="addToFavoritesFromDashboard('${JSON.stringify(repo).replace(/'/g, "&#39;")}', '${token}')">❤️ Add to Favorites</button>
-                                <button class="btn-small" onclick="addToCollectionFromDashboard('${repo.id}')">📁 Add to Collection</button>
+                                <button class="btn-small" onclick="addToFavoritesFromDashboard(${repo.id}, '${token}')">❤️ Add to Favorites</button>
+                                <button class="btn-small" onclick="addToCollectionFromDashboard(${repo.id}, '${token}')">📁 Add to Collection</button>
                             </div>
                         </div>
-                    `).join('')}
+                    `;
+            }).join('')}
                 </div>
             `;
             resultsEl.style.display = 'block';
         }
 
-        async function addToFavoritesFromDashboard(repoJson, token) {
+        async function addToFavoritesFromDashboard(repoId, token) {
             try {
-                const repo = JSON.parse(repoJson);
+                const repo = window.dashboardRepoCache[repoId];
+                if (!repo) {
+                    alert('Unable to add this repository to favorites. Please try again.');
+                    return;
+                }
+
                 const response = await fetch('/api/v1/users/favorites', {
                     method: 'POST',
                     headers: {
@@ -1119,6 +1137,9 @@
                 if (response.ok) {
                     await loadFavorites(token);
                     alert('Added to favorites!');
+                } else {
+                    const body = await response.json().catch(() => null);
+                    alert(body?.detail || 'Failed to add to favorites.');
                 }
             } catch (error) {
                 alert('Failed to add to favorites');
@@ -1163,7 +1184,9 @@
                         return;
                     }
 
-                    container.innerHTML = recommendations.map(repo => `
+                    container.innerHTML = recommendations.map(repo => {
+                        window.dashboardRepoCache[repo.id] = repo;
+                        return `
                         <div class="repo-card">
                             <div class="repo-header">
                                 <div>
@@ -1177,10 +1200,11 @@
                                 <span>💻 ${repo.language || 'N/A'}</span>
                             </div>
                             <div class="repo-actions">
-                                <button class="btn-small" onclick="addToFavoritesFromDashboard('${JSON.stringify(repo).replace(/'/g, "&#39;")}', '${token}')">❤️ Add to Favorites</button>
+                                <button class="btn-small" onclick="addToFavoritesFromDashboard(${repo.id}, '${token}')">❤️ Add to Favorites</button>
                             </div>
                         </div>
-                    `).join('');
+                    `;
+                    }).join('');
                 } else {
                     container.innerHTML = '<p>Failed to load recommendations</p>';
                 }
@@ -1217,12 +1241,63 @@
             alert('Save search feature coming soon!');
         }
 
-        function showCreateCollectionModal() {
-            alert('Create collection feature coming soon!');
+        async function showCreateCollectionModal() {
+            const name = prompt('Enter a collection name:');
+            if (!name) return;
+            const description = prompt('Enter a description (optional):');
+            const token = window.userToken;
+            if (!token) {
+                alert('Please login first.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/users/collections', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, description, repo_ids: [] })
+                });
+
+                if (response.ok) {
+                    await loadCollections(token);
+                    alert('Collection created!');
+                } else {
+                    const body = await response.json().catch(() => null);
+                    alert(body?.detail || 'Failed to create collection.');
+                }
+            } catch (error) {
+                alert('Failed to create collection');
+            }
         }
 
-        function addToCollectionFromDashboard(repoId) {
-            alert('Add to collection feature coming soon!');
+        async function addToCollectionFromDashboard(repoId, token) {
+            const name = prompt('Enter a collection name for this repository:');
+            if (!name) return;
+            const description = prompt('Enter a description (optional):');
+            
+            try {
+                const response = await fetch('/api/v1/users/collections', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, description, repo_ids: [Number(repoId)] })
+                });
+
+                if (response.ok) {
+                    await loadCollections(token);
+                    alert('Added to collection!');
+                } else {
+                    const body = await response.json().catch(() => null);
+                    alert(body?.detail || 'Failed to add to collection.');
+                }
+            } catch (error) {
+                alert('Failed to add to collection');
+            }
         }
 
         // Initialize on page load
