@@ -4,9 +4,11 @@ from __future__ import annotations
 from collections import Counter
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import RedirectResponse
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
+import httpx
 
 from app.core.auth import get_current_user
 from app.core.config import get_settings
@@ -44,6 +46,17 @@ from app.services.user import (
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+
+@router.get("/auth/config", summary="Get OAuth configuration")
+async def get_oauth_config():
+    """Returns the Google OAuth client ID for frontend OAuth flow."""
+    settings = get_settings()
+    if not settings.google_oauth_client_id:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Google OAuth client ID is not configured.",
+        )
+    return {"client_id": settings.google_oauth_client_id}
 
 def _to_public_profile(user: UserProfile) -> UserProfileResponse:
     return UserProfileResponse(
@@ -97,6 +110,69 @@ async def google_login(request: GoogleLoginRequest) -> AuthResponse:
 
     return AuthResponse(access_token=access_token, user=_to_public_profile(profile))
 
+
+@router.get("/auth/callback", summary="Google OAuth callback")
+async def google_callback(code: str = Query(...), state: str = Query(None)) -> RedirectResponse:
+    """
+    Callback endpoint for Google OAuth 2.0 authorization code flow.
+    Exchanges the authorization code for an ID token and creates a user session.
+    """
+    settings = get_settings()
+    if not settings.google_oauth_client_id or not settings.google_oauth_client_secret:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Google OAuth credentials are not configured.",
+        )
+
+    try:
+        # Exchange authorization code for ID token
+        async with httpx.AsyncClient() as client:
+            token_response = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "code": code,
+                    "client_id": settings.google_oauth_client_id,
+                    "client_secret": settings.google_oauth_client_secret,
+                    "redirect_uri": f"{settings.app_url}/api/v1/users/auth/callback",
+                    "grant_type": "authorization_code",
+                },
+            )
+            token_response.raise_for_status()
+            token_data = token_response.json()
+
+        id_token_str = token_data.get("id_token")
+        if not id_token_str:
+            raise ValueError("No ID token in response")
+
+        # Verify the ID token
+        id_info = id_token.verify_oauth2_token(
+            id_token_str,
+            google_requests.Request(),
+            settings.google_oauth_client_id,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"OAuth callback failed: {str(exc)}",
+        ) from exc
+
+    # Create/update user profile
+    user_id = f"google:{id_info['sub']}"
+    profile = UserProfile(
+        user_id=user_id,
+        email=id_info.get("email"),
+        name=id_info.get("name", id_info.get("email", user_id)),
+        avatar_url=id_info.get("picture"),
+    )
+
+    await create_or_update_user_profile(profile)
+    access_token = await create_session_for_user(user_id)
+
+    # Redirect back to homepage with access token in URL
+    return RedirectResponse(
+        url=f"/?token={access_token}&name={profile.name}",
+        status_code=status.HTTP_302_FOUND,
+    )
 
 @router.get("/me", response_model=UserProfileResponse, summary="Get current user profile")
 async def get_current_profile(user: UserProfile = Depends(get_current_user)) -> UserProfileResponse:

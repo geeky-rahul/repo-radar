@@ -72,6 +72,28 @@
             font-weight: 500;
         }
 
+        .auth-controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            color: #020617;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(16, 185, 129, 0.25);
+        }
+
         .search-box {
             background: rgba(15, 23, 42, 0.92);
             padding: 28px;
@@ -355,6 +377,10 @@
             .repo-meta {
                 grid-template-columns: 1fr;
             }
+
+            .auth-controls {
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -370,6 +396,9 @@
                 <span class="hero-pill">AI parsing + fallback</span>
                 <span class="hero-pill">GitHub Search API</span>
                 <span class="hero-pill">Redis cache ready</span>
+            </div>
+            <div class="auth-controls">
+                <button class="btn-login" id="signInBtn" type="button">Sign in with Google</button>
             </div>
         </header>
 
@@ -436,6 +465,45 @@
         const resultsList = document.getElementById('resultsList');
         const resultStats = document.getElementById('resultStats');
         const searchBtn = document.getElementById('searchBtn');
+        const signInBtn = document.getElementById('signInBtn');
+
+        signInBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/v1/users/auth/config');
+                const config = await response.json();
+                
+                const redirectUri = `${window.location.origin}/api/v1/users/auth/callback`;
+                const scope = 'openid email profile';
+                const responseType = 'code';
+                
+                const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+                    `client_id=${encodeURIComponent(config.client_id)}&` +
+                    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+                    `response_type=${encodeURIComponent(responseType)}&` +
+                    `scope=${encodeURIComponent(scope)}`;
+                
+                window.location.href = authUrl;
+            } catch (err) {
+                alert(`Failed to load OAuth config: ${err.message}`);
+            }
+        });
+
+        // Handle OAuth callback token
+        function handleOAuthCallback() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            const name = params.get('name');
+            
+            if (token) {
+                localStorage.setItem('githubSearchUserToken', token);
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                alert(`Welcome back, ${name || 'User'}!`);
+                location.reload();
+            }
+        }
+        
+        handleOAuthCallback();
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();

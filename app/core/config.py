@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_host: str = "0.0.0.0"
     app_port: int = 8000
+    app_url: str = "http://localhost:8000"
     app_debug: bool = False
     log_level: str = "INFO"
     cors_origins: list[str] = []
@@ -39,6 +40,7 @@ class Settings(BaseSettings):
 
     # Google
     google_oauth_client_id: str = ""
+    google_oauth_client_secret: str = ""
 
     # Ranking weights
     ranking_stars_weight: float = 0.45
