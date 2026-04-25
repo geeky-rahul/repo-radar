@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Search API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .login-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .login-btn:hover {
+            background: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.4);
+        }
+
+        .login-btn img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .user-info.show {
+            display: block;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+
+        .user-details {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .search-section {
+            margin-bottom: 40px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+
+        .search-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .advanced-options {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .option-input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .repo-card {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .repo-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .repo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .repo-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0366d6;
+            text-decoration: none;
+            margin-bottom: 5px;
+        }
+
+        .repo-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #586069;
+        }
+
+        .repo-description {
+            color: #586069;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .repo-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #586069;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .user-features {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .user-features.show {
+            display: block;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .btn-small {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .btn-small:hover {
+            background: #0056b3;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: auto;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔍 GitHub Search API</h1>
+            <p>Find the best repositories with advanced search and intelligent ranking</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Login Section -->
+            <section class="login-section" id="loginSection">
+                <h2>Welcome! Please sign in to access all features</h2>
+                <p>Get personalized recommendations, save your favorite repos, and manage your searches.</p>
+                <br>
+                <button class="login-btn" onclick="loginWithGoogle()">
+                    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
+                    Sign in with Google
+                </button>
+            </section>
+
+            <!-- User Info (shown when logged in) -->
+            <section class="user-info" id="userInfo">
+                <div class="user-details">
+                    <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+                    <div>
+                        <h3 id="userName">Welcome back!</h3>
+                        <p id="userEmail"></p>
+                    </div>
+                </div>
+                <button class="btn-small btn-danger" onclick="logout()">Logout</button>
+            </section>
+
+            <!-- Search Section -->
+            <section class="search-section">
+                <h2>🔍 Search GitHub Repositories</h2>
+                <form class="search-form" onsubmit="performSearch(event)">
+                    <input
+                        type="text"
+                        class="search-input"
+                        id="searchQuery"
+                        placeholder="e.g., python machine learning, react dashboard, golang web framework"
+                        required
+                    >
+                    <button type="submit" class="search-btn">Search</button>
+                </form>
+
+                <!-- Advanced Options -->
+                <div class="advanced-options">
+                    <h3>🎯 Advanced Filters</h3>
+                    <div class="options-grid">
+                        <div class="option-group">
+                            <label for="language">Language:</label>
+                            <input type="text" class="option-input" id="language" placeholder="python, javascript, go...">
+                        </div>
+                        <div class="option-group">
+                            <label for="minStars">Min Stars:</label>
+                            <input type="number" class="option-input" id="minStars" placeholder="100">
+                        </div>
+                        <div class="option-group">
+                            <label for="fork">Include Forks:</label>
+                            <select class="option-input" id="fork">
+                                <option value="">Any</option>
+                                <option value="true">Only forks</option>
+                                <option value="false">No forks</option>
+                            </select>
+                        </div>
+                        <div class="option-group">
+                            <label for="archived">Include Archived:</label>
+                            <select class="option-input" id="archived">
+                                <option value="">Any</option>
+                                <option value="false">Active only</option>
+                                <option value="true">Archived only</option>
+                            </select>
+                        </div>
+                        <div class="option-group">
+                            <label for="topic">Topic:</label>
+                            <input type="text" class="option-input" id="topic" placeholder="machine-learning, web...">
+                        </div>
+                        <div class="option-group">
+                            <label for="license">License:</label>
+                            <input type="text" class="option-input" id="license" placeholder="MIT, Apache-2.0...">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <h2>📊 Search Results</h2>
+                <div id="resultsContainer"></div>
+            </section>
+
+            <!-- User Features (shown when logged in) -->
+            <section class="user-features" id="userFeatures">
+                <h2>👤 Your Dashboard</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>❤️ Favorite Repositories</h3>
+                        <ul class="feature-list" id="favoritesList">
+                            <li>Loading favorites...</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🔍 Saved Searches</h3>
+                        <ul class="feature-list" id="savedSearchesList">
+                            <li>Loading saved searches...</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📁 Collections</h3>
+                        <ul class="feature-list" id="collectionsList">
+                            <li>Loading collections...</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3>💡 Recommendations</h3>
+                        <p>Get personalized repository recommendations based on your starred repos!</p>
+                        <button class="btn-small" onclick="getRecommendations()">Get Recommendations</button>
+                        <div id="recommendationsContainer" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE = window.location.origin;
+
+        // Global state
+        let userToken = localStorage.getItem('userToken');
+        let userProfile = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            if (userToken) {
+                showLoggedInState();
+            } else {
+                showLoggedOutState();
+            }
+        });
+
+        // Google OAuth login
+        function loginWithGoogle() {
+            // For demo purposes, we'll simulate the OAuth flow
+            // In a real app, this would redirect to Google OAuth
+            const googleToken = prompt('Enter Google OAuth token (for demo):');
+            if (googleToken) {
+                authenticateWithGoogle(googleToken);
+            }
+        }
+
+        // Authenticate with Google token
+        async function authenticateWithGoogle(token) {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/users/auth/google`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: token })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    userToken = data.access_token;
+                    localStorage.setItem('userToken', userToken);
+                    await loadUserProfile();
+                    showLoggedInState();
+                } else {
+                    alert('Login failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed. Please try again.');
+            }
+        }
+
+        // Load user profile
+        async function loadUserProfile() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/users/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    userProfile = await response.json();
+                    updateUserInfo();
+                }
+            } catch (error) {
+                console.error('Failed to load user profile:', error);
+            }
+        }
+
+        // Update user info display
+        function updateUserInfo() {
+            if (userProfile) {
+                document.getElementById('userName').textContent = userProfile.name || 'User';
+                document.getElementById('userEmail').textContent = userProfile.email;
+                document.getElementById('userAvatar').src = userProfile.avatar_url || 'https://via.placeholder.com/60';
+            }
+        }
+
+        // Show logged in state
+        function showLoggedInState() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('userInfo').classList.add('show');
+            document.getElementById('userFeatures').classList.add('show');
+            loadUserData();
+        }
+
+        // Show logged out state
+        function showLoggedOutState() {
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('userInfo').classList.remove('show');
+            document.getElementById('userFeatures').classList.remove('show');
+            document.getElementById('resultsSection').style.display = 'none';
+        }
+
+        // Logout
+        function logout() {
+            userToken = null;
+            userProfile = null;
+            localStorage.removeItem('userToken');
+            showLoggedOutState();
+        }
+
+        // Load user data (favorites, saved searches, collections)
+        async function loadUserData() {
+            if (!userToken) return;
+
+            try {
+                // Load favorites
+                const favoritesResponse = await fetch(`${API_BASE}/api/v1/users/favorites`, {
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+                if (favoritesResponse.ok) {
+                    const favorites = await favoritesResponse.json();
+                    displayFavorites(favorites);
+                }
+
+                // Load saved searches
+                const searchesResponse = await fetch(`${API_BASE}/api/v1/users/saved-searches`, {
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+                if (searchesResponse.ok) {
+                    const searches = await searchesResponse.json();
+                    displaySavedSearches(searches);
+                }
+
+                // Load collections
+                const collectionsResponse = await fetch(`${API_BASE}/api/v1/users/collections`, {
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+                if (collectionsResponse.ok) {
+                    const collections = await collectionsResponse.json();
+                    displayCollections(collections);
+                }
+            } catch (error) {
+                console.error('Failed to load user data:', error);
+            }
+        }
+
+        // Display favorites
+        function displayFavorites(favorites) {
+            const list = document.getElementById('favoritesList');
+            if (favorites.length === 0) {
+                list.innerHTML = '<li>No favorite repositories yet</li>';
+                return;
+            }
+
+            list.innerHTML = favorites.map(repo => `
+                <li>
+                    <div>
+                        <strong>${repo.name}</strong>
+                        <br><small>${repo.owner.login}</small>
+                    </div>
+                    <button class="btn-small btn-danger" onclick="removeFavorite('${repo.id}')">Remove</button>
+                </li>
+            `).join('');
+        }
+
+        // Display saved searches
+        function displaySavedSearches(searches) {
+            const list = document.getElementById('savedSearchesList');
+            if (searches.length === 0) {
+                list.innerHTML = '<li>No saved searches yet</li>';
+                return;
+            }
+
+            list.innerHTML = searches.map(search => `
+                <li>
+                    <div>
+                        <strong>${search.name}</strong>
+                        <br><small>${search.query}</small>
+                    </div>
+                    <button class="btn-small" onclick="performSearchFromSaved('${search.query}')">Search</button>
+                </li>
+            `).join('');
+        }
+
+        // Display collections
+        function displayCollections(collections) {
+            const list = document.getElementById('collectionsList');
+            if (collections.length === 0) {
+                list.innerHTML = '<li>No collections yet</li>';
+                return;
+            }
+
+            list.innerHTML = collections.map(collection => `
+                <li>
+                    <div>
+                        <strong>${collection.name}</strong>
+                        <br><small>${collection.description}</small>
+                    </div>
+                    <button class="btn-small" onclick="viewCollection('${collection.id}')">View</button>
+                </li>
+            `).join('');
+        }
+
+        // Perform search
+        async function performSearch(event) {
+            event.preventDefault();
+
+            const query = document.getElementById('searchQuery').value.trim();
+            if (!query) return;
+
+            const params = new URLSearchParams({
+                q: query,
+                top_k: 20
+            });
+
+            // Add advanced filters
+            const language = document.getElementById('language').value.trim();
+            const minStars = document.getElementById('minStars').value.trim();
+            const fork = document.getElementById('fork').value;
+            const archived = document.getElementById('archived').value;
+            const topic = document.getElementById('topic').value.trim();
+            const license = document.getElementById('license').value.trim();
+
+            if (language) params.append('language', language);
+            if (minStars) params.append('min_stars', minStars);
+            if (fork) params.append('fork', fork);
+            if (archived) params.append('archived', archived);
+            if (topic) params.append('topic', topic);
+            if (license) params.append('license', license);
+
+            showLoading();
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/search?${params}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResults(data.results);
+
+                    // If user is logged in, offer to save this search
+                    if (userToken) {
+                        const saveSearch = confirm('Would you like to save this search?');
+                        if (saveSearch) {
+                            const searchName = prompt('Enter a name for this search:');
+                            if (searchName) {
+                                await saveSearchQuery(searchName, query);
+                            }
+                        }
+                    }
+                } else {
+                    showError('Search failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                showError('Search failed. Please try again.');
+            }
+        }
+
+        // Perform search from saved search
+        function performSearchFromSaved(query) {
+            document.getElementById('searchQuery').value = query;
+            performSearch(new Event('submit'));
+        }
+
+        // Save search query
+        async function saveSearchQuery(name, query) {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/users/saved-searches`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, query })
+                });
+
+                if (response.ok) {
+                    loadUserData(); // Refresh the saved searches list
+                }
+            } catch (error) {
+                console.error('Failed to save search:', error);
+            }
+        }
+
+        // Display search results
+        function displayResults(results) {
+            const container = document.getElementById('resultsContainer');
+            const section = document.getElementById('resultsSection');
+
+            if (results.length === 0) {
+                container.innerHTML = '<p>No results found.</p>';
+                section.style.display = 'block';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="results-grid">
+                    ${results.map(repo => `
+                        <div class="repo-card" onclick="openRepo('${repo.html_url}')">
+                            <div class="repo-header">
+                                <div>
+                                    <a href="${repo.html_url}" class="repo-title" target="_blank">
+                                        ${repo.owner.login}/${repo.name}
+                                    </a>
+                                    <div class="repo-stats">
+                                        <span>⭐ ${repo.stargazers_count || 0}</span>
+                                        <span>🍴 ${repo.forks_count || 0}</span>
+                                        ${repo.language ? `<span>💻 ${repo.language}</span>` : ''}
+                                    </div>
+                                </div>
+                                ${userToken ? `<button class="btn-small" onclick="addToFavorites(event, '${repo.id}', '${repo.name}', '${repo.owner.login}')">❤️ Add to Favorites</button>` : ''}
+                            </div>
+                            ${repo.description ? `<p class="repo-description">${repo.description}</p>` : ''}
+                            <div class="repo-meta">
+                                <span>Updated ${new Date(repo.updated_at).toLocaleDateString()}</span>
+                                ${repo.archived ? '<span class="archived">📁 Archived</span>' : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            section.style.display = 'block';
+        }
+
+        // Add repository to favorites
+        async function addToFavorites(event, repoId, repoName, ownerLogin) {
+            event.stopPropagation();
+
+            const repo = {
+                id: parseInt(repoId),
+                name: repoName,
+                owner: { login: ownerLogin },
+                html_url: `https://github.com/${ownerLogin}/${repoName}`,
+                description: '',
+                stargazers_count: 0,
+                forks_count: 0,
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/users/favorites`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(repo)
+                });
+
+                if (response.ok) {
+                    loadUserData(); // Refresh favorites
+                    alert('Added to favorites!');
+                }
+            } catch (error) {
+                console.error('Failed to add favorite:', error);
+            }
+        }
+
+        // Remove from favorites
+        async function removeFavorite(repoId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/users/favorites/${repoId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadUserData(); // Refresh favorites
+                }
+            } catch (error) {
+                console.error('Failed to remove favorite:', error);
+            }
+        }
+
+        // Get recommendations
+        async function getRecommendations() {
+            const container = document.getElementById('recommendationsContainer');
+            container.innerHTML = '<div class="loading">Getting recommendations...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/users/recommendations`, {
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+
+                if (response.ok) {
+                    const recommendations = await response.json();
+                    displayRecommendations(recommendations);
+                } else {
+                    container.innerHTML = '<p>Failed to get recommendations.</p>';
+                }
+            } catch (error) {
+                console.error('Recommendations error:', error);
+                container.innerHTML = '<p>Failed to get recommendations.</p>';
+            }
+        }
+
+        // Display recommendations
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('recommendationsContainer');
+
+            if (recommendations.length === 0) {
+                container.innerHTML = '<p>No recommendations available.</p>';
+                return;
+            }
+
+            container.innerHTML = recommendations.map(repo => `
+                <div class="repo-card" onclick="openRepo('${repo.html_url}')">
+                    <div class="repo-header">
+                        <div>
+                            <a href="${repo.html_url}" class="repo-title" target="_blank">
+                                ${repo.owner.login}/${repo.name}
+                            </a>
+                            <div class="repo-stats">
+                                <span>⭐ ${repo.stargazers_count || 0}</span>
+                                <span>🍴 ${repo.forks_count || 0}</span>
+                            </div>
+                        </div>
+                        <button class="btn-small" onclick="addToFavorites(event, '${repo.id}', '${repo.name}', '${repo.owner.login}')">❤️ Add</button>
+                    </div>
+                    ${repo.description ? `<p class="repo-description">${repo.description}</p>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // View collection (placeholder)
+        function viewCollection(collectionId) {
+            alert('Collection viewing not implemented yet. Collection ID: ' + collectionId);
+        }
+
+        // Open repository in new tab
+        function openRepo(url) {
+            window.open(url, '_blank');
+        }
+
+        // Show loading state
+        function showLoading() {
+            const container = document.getElementById('resultsContainer');
+            const section = document.getElementById('resultsSection');
+            container.innerHTML = '<div class="loading">🔍 Searching repositories...</div>';
+            section.style.display = 'block';
+        }
+
+        // Show error
+        function showError(message) {
+            const container = document.getElementById('resultsContainer');
+            const section = document.getElementById('resultsSection');
+            container.innerHTML = `<div class="error">${message}</div>`;
+            section.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
