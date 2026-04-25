@@ -363,6 +363,274 @@
             }
         }
 
+        .user-dashboard {
+            background: rgba(15, 23, 42, 0.92);
+            border-radius: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            overflow: hidden;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, rgba(67, 83, 255, 0.15), rgba(139, 92, 246, 0.15));
+            padding: 32px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .user-info {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(96, 165, 250, 0.5);
+        }
+
+        .user-avatar-placeholder {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4753ff, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .user-info h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: #f8fafc;
+        }
+
+        .user-info p {
+            margin: 4px 0 0 0;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+        }
+
+        .btn-logout {
+            background: rgba(248, 113, 113, 0.12);
+            color: #fecaca;
+            border: 1px solid rgba(248, 113, 113, 0.25);
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(248, 113, 113, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .dashboard-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            gap: 0;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 16px 20px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: #cbd5e1;
+            background: rgba(148, 163, 184, 0.06);
+        }
+
+        .tab-btn.active {
+            color: #4753ff;
+            border-bottom-color: #4753ff;
+        }
+
+        .dashboard-content {
+            padding: 28px;
+            min-height: 400px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .favorites-list,
+        .searches-list,
+        .collections-list,
+        .recommendations-container {
+            display: grid;
+            gap: 16px;
+        }
+
+        .favorite-card,
+        .search-card,
+        .collection-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .favorite-card:hover,
+        .search-card:hover,
+        .collection-card:hover {
+            border-color: rgba(96, 165, 250, 0.3);
+            background: rgba(30, 41, 59, 1);
+        }
+
+        .favorite-info {
+            flex: 1;
+        }
+
+        .favorite-info .repo-title {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .favorite-info .repo-title:hover {
+            color: #4753ff;
+            text-decoration: underline;
+        }
+
+        .favorite-info .repo-description {
+            margin: 8px 0;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .search-info {
+            flex: 1;
+        }
+
+        .search-info h3 {
+            margin: 0 0 8px 0;
+            color: #f8fafc;
+        }
+
+        .search-query {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .collection-card {
+            flex-direction: column;
+        }
+
+        .collection-card h3 {
+            margin: 0 0 8px 0;
+            color: #f8fafc;
+        }
+
+        .collection-card p {
+            margin: 0 0 8px 0;
+            color: #cbd5e1;
+        }
+
+        .collection-card small {
+            color: #64748b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .btn-danger {
+            background: rgba(248, 113, 113, 0.12);
+            color: #fecaca;
+            border: 1px solid rgba(248, 113, 113, 0.25);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-danger:hover {
+            background: rgba(248, 113, 113, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            background: rgba(96, 165, 250, 0.12);
+            color: #bfdbfe;
+            border: 1px solid rgba(96, 165, 250, 0.25);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-small:hover {
+            background: rgba(96, 165, 250, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .search-results-header {
+            margin-bottom: 20px;
+            color: #cbd5e1;
+        }
+
+        .search-results {
+            display: grid;
+            gap: 16px;
+        }
+
+        .repo-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .saved-searches-container,
+        .collections-container {
+            display: grid;
+            gap: 16px;
+        }
+
         @media (max-width: 640px) {
             body {
                 padding: 16px;
@@ -380,6 +648,28 @@
 
             .auth-controls {
                 justify-content: center;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .dashboard-tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab-btn {
+                flex: 0 1 auto;
+            }
+
+            .favorite-card,
+            .search-card {
+                flex-direction: column;
+            }
+
+            .dashboard-content {
+                padding: 16px;
             }
         }
     </style>
@@ -504,6 +794,439 @@
         }
         
         handleOAuthCallback();
+
+        // Check if user is logged in on page load
+        async function initializeApp() {
+            const token = localStorage.getItem('githubSearchUserToken');
+            if (token) {
+                await showUserDashboard(token);
+            }
+        }
+
+        async function showUserDashboard(token) {
+            // Hide search form and show dashboard
+            document.querySelector('.search-box').style.display = 'none';
+            
+            // Get user profile
+            const profileResponse = await fetch('/api/v1/users/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!profileResponse.ok) {
+                localStorage.removeItem('githubSearchUserToken');
+                location.reload();
+                return;
+            }
+
+            const user = await profileResponse.json();
+
+            // Create and show dashboard
+            const dashboardHtml = `
+                <section class="user-dashboard" id="dashboard">
+                    <div class="dashboard-header">
+                        <div class="user-info">
+                            ${user.avatar_url ? `<img src="${user.avatar_url}" alt="${user.name}" class="user-avatar">` : '<div class="user-avatar-placeholder">👤</div>'}
+                            <div>
+                                <h2>${user.name}</h2>
+                                <p>${user.email}</p>
+                            </div>
+                        </div>
+                        <button class="btn-logout" onclick="logoutUser()">Logout</button>
+                    </div>
+
+                    <div class="dashboard-tabs">
+                        <button class="tab-btn active" data-tab="search" onclick="switchTab('search', event)">🔍 Search</button>
+                        <button class="tab-btn" data-tab="favorites" onclick="switchTab('favorites', event)">❤️ Favorites</button>
+                        <button class="tab-btn" data-tab="searches" onclick="switchTab('searches', event)">📌 Saved Searches</button>
+                        <button class="tab-btn" data-tab="collections" onclick="switchTab('collections', event)">📁 Collections</button>
+                        <button class="tab-btn" data-tab="recommendations" onclick="switchTab('recommendations', event)">💡 Recommendations</button>
+                    </div>
+
+                    <div class="dashboard-content">
+                        <!-- Search Tab -->
+                        <div class="tab-content active" id="search-tab" data-tab="search">
+                            <form class="search-form" id="dashboardSearchForm">
+                                <div class="field-grid wide">
+                                    <div class="form-group">
+                                        <label for="dashQuery">Search query</label>
+                                        <input id="dashQuery" name="query" type="text" placeholder="e.g. best beginner python chatbot project" required>
+                                    </div>
+                                </div>
+                                <div class="field-grid">
+                                    <div class="form-group">
+                                        <label for="dashLanguage">Language (optional)</label>
+                                        <input id="dashLanguage" name="language" type="text" placeholder="python, javascript, go...">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dashMinStars">Minimum stars (optional)</label>
+                                        <input id="dashMinStars" name="minStars" type="number" min="0" placeholder="100">
+                                    </div>
+                                </div>
+                                <div class="field-grid">
+                                    <div class="form-group">
+                                        <label for="dashPushedAfter">Pushed after (optional)</label>
+                                        <input id="dashPushedAfter" name="pushedAfter" type="date">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dashTopK">Results to return</label>
+                                        <input id="dashTopK" name="topK" type="number" min="1" max="30" value="10">
+                                    </div>
+                                </div>
+                                <div class="buttons">
+                                    <button type="submit" class="btn-search" id="dashSearchBtn">Search repositories</button>
+                                    <button type="reset" class="btn-clear">Reset</button>
+                                </div>
+                            </form>
+                            <div class="loading" id="dashLoading">
+                                <div class="spinner"></div>
+                                <span>Running search...</span>
+                            </div>
+                            <div class="error" id="dashError"></div>
+                            <div class="results" id="dashResults" style="display: none;"></div>
+                        </div>
+
+                        <!-- Favorites Tab -->
+                        <div class="tab-content" id="favorites-tab" data-tab="favorites">
+                            <div id="favoritesList" class="favorites-list"></div>
+                        </div>
+
+                        <!-- Saved Searches Tab -->
+                        <div class="tab-content" id="searches-tab" data-tab="searches">
+                            <div class="saved-searches-container">
+                                <button class="btn-search" onclick="showSaveSearchModal()">+ Save New Search</button>
+                                <div id="savedSearchesList" class="searches-list"></div>
+                            </div>
+                        </div>
+
+                        <!-- Collections Tab -->
+                        <div class="tab-content" id="collections-tab" data-tab="collections">
+                            <div class="collections-container">
+                                <button class="btn-search" onclick="showCreateCollectionModal()">+ Create Collection</button>
+                                <div id="collectionsList" class="collections-list"></div>
+                            </div>
+                        </div>
+
+                        <!-- Recommendations Tab -->
+                        <div class="tab-content" id="recommendations-tab" data-tab="recommendations">
+                            <div id="recommendationsContainer" class="recommendations-container"></div>
+                        </div>
+                    </div>
+                </section>
+            `;
+
+            // Insert dashboard before footer
+            const footer = document.querySelector('.footer');
+            footer.insertAdjacentHTML('beforebegin', dashboardHtml);
+
+            // Load user data
+            await loadDashboardData(token);
+
+            // Set up form handler
+            document.getElementById('dashboardSearchForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                performDashboardSearch(token);
+            });
+
+            // Store token globally for other functions
+            window.userToken = token;
+        }
+
+        async function loadDashboardData(token) {
+            await loadFavorites(token);
+            await loadSavedSearches(token);
+            await loadCollections(token);
+        }
+
+        async function loadFavorites(token) {
+            const response = await fetch('/api/v1/users/favorites', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const favorites = await response.json();
+            const listEl = document.getElementById('favoritesList');
+
+            if (!favorites.length) {
+                listEl.innerHTML = '<p class="empty-state">No favorite repositories yet. Add from search results!</p>';
+                return;
+            }
+
+            listEl.innerHTML = favorites.map(repo => `
+                <div class="favorite-card">
+                    <div class="favorite-info">
+                        <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer" class="repo-title">${repo.full_name}</a>
+                        <p class="repo-description">${repo.description || 'No description'}</p>
+                        <div class="repo-meta">
+                            <span>⭐ ${repo.stargazers_count.toLocaleString()}</span>
+                            <span>🔀 ${repo.forks_count.toLocaleString()}</span>
+                            <span>💻 ${repo.language || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <button class="btn-danger" onclick="removeFavoriteFromDashboard(${repo.id}, '${window.userToken}')">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        async function loadSavedSearches(token) {
+            const response = await fetch('/api/v1/users/saved-searches', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const searches = await response.json();
+            const listEl = document.getElementById('savedSearchesList');
+
+            if (!searches.length) {
+                listEl.innerHTML = '<p class="empty-state">No saved searches yet. Save searches from the Search tab!</p>';
+                return;
+            }
+
+            listEl.innerHTML = searches.map(search => `
+                <div class="search-card">
+                    <div class="search-info">
+                        <h3>${search.name}</h3>
+                        <p class="search-query">${search.query}</p>
+                    </div>
+                    <button class="btn-search btn-small" onclick="runSavedSearch('${search.query}')">Run Search</button>
+                </div>
+            `).join('');
+        }
+
+        async function loadCollections(token) {
+            const response = await fetch('/api/v1/users/collections', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const collections = await response.json();
+            const listEl = document.getElementById('collectionsList');
+
+            if (!collections.length) {
+                listEl.innerHTML = '<p class="empty-state">No collections yet. Create one to organize repositories!</p>';
+                return;
+            }
+
+            listEl.innerHTML = collections.map(col => `
+                <div class="collection-card">
+                    <h3>${col.name}</h3>
+                    <p>${col.description || 'No description'}</p>
+                    <small>ID: ${col.id}</small>
+                </div>
+            `).join('');
+        }
+
+        function switchTab(tabName, event) {
+            event.preventDefault();
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            const activeTab = document.getElementById(tabName + '-tab');
+            if (activeTab) {
+                activeTab.classList.add('active');
+                if (tabName === 'recommendations') {
+                    loadRecommendations(window.userToken);
+                }
+            }
+        }
+
+        async function performDashboardSearch(token) {
+            const query = document.getElementById('dashQuery').value.trim();
+            if (!query) {
+                showDashboardError('Please enter a search query.');
+                return;
+            }
+
+            const payload = {
+                query,
+                top_k: parseInt(document.getElementById('dashTopK').value, 10) || 10,
+            };
+
+            const language = document.getElementById('dashLanguage').value.trim();
+            const minStars = document.getElementById('dashMinStars').value;
+            const pushedAfter = document.getElementById('dashPushedAfter').value;
+
+            if (language) payload.language = language;
+            if (minStars) payload.min_stars = Number(minStars);
+            if (pushedAfter) payload.pushed_after = pushedAfter;
+
+            document.getElementById('dashLoading').style.display = 'flex';
+            document.getElementById('dashResults').style.display = 'none';
+            hideDashboardError();
+
+            try {
+                const response = await fetch('/api/v1/search/repositories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) throw new Error('Search failed');
+
+                const data = await response.json();
+                renderDashboardResults(data, token);
+            } catch (err) {
+                showDashboardError(err.message);
+            } finally {
+                document.getElementById('dashLoading').style.display = 'none';
+            }
+        }
+
+        function renderDashboardResults(data, token) {
+            const resultsEl = document.getElementById('dashResults');
+            resultsEl.innerHTML = `
+                <div class="search-results-header">
+                    <h3>${data.total_found} repositories found in ${data.duration_ms}ms</h3>
+                </div>
+                <div class="search-results">
+                    ${data.results.map(repo => `
+                        <div class="repo-card">
+                            <div class="repo-header">
+                                <div>
+                                    <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer" class="repo-title">${repo.full_name}</a>
+                                    <p class="repo-description">${repo.description || 'No description'}</p>
+                                </div>
+                                <div class="repo-score">${Math.round(repo.score * 100)}%</div>
+                            </div>
+                            <div class="repo-meta">
+                                <span>⭐ ${repo.stargazers_count.toLocaleString()}</span>
+                                <span>🔀 ${repo.forks_count.toLocaleString()}</span>
+                                <span>💻 ${repo.language || 'N/A'}</span>
+                            </div>
+                            <div class="repo-actions">
+                                <button class="btn-small" onclick="addToFavoritesFromDashboard('${JSON.stringify(repo).replace(/'/g, "&#39;")}', '${token}')">❤️ Add to Favorites</button>
+                                <button class="btn-small" onclick="addToCollectionFromDashboard('${repo.id}')">📁 Add to Collection</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            resultsEl.style.display = 'block';
+        }
+
+        async function addToFavoritesFromDashboard(repoJson, token) {
+            try {
+                const repo = JSON.parse(repoJson);
+                const response = await fetch('/api/v1/users/favorites', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(repo)
+                });
+
+                if (response.ok) {
+                    await loadFavorites(token);
+                    alert('Added to favorites!');
+                }
+            } catch (error) {
+                alert('Failed to add to favorites');
+            }
+        }
+
+        async function removeFavoriteFromDashboard(repoId, token) {
+            try {
+                const response = await fetch(`/api/v1/users/favorites/${repoId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    await loadFavorites(token);
+                    alert('Removed from favorites');
+                }
+            } catch (error) {
+                alert('Failed to remove favorite');
+            }
+        }
+
+        async function runSavedSearch(query) {
+            document.getElementById('dashQuery').value = query;
+            switchTab('search', { target: document.querySelector('[data-tab="search"]') });
+            performDashboardSearch(window.userToken);
+        }
+
+        async function loadRecommendations(token) {
+            const container = document.getElementById('recommendationsContainer');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading recommendations...</span></div>';
+
+            try {
+                const response = await fetch('/api/v1/users/recommendations', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const recommendations = await response.json();
+                    if (recommendations.length === 0) {
+                        container.innerHTML = '<p class="empty-state">No recommendations yet. Star some repositories on GitHub to get personalized recommendations!</p>';
+                        return;
+                    }
+
+                    container.innerHTML = recommendations.map(repo => `
+                        <div class="repo-card">
+                            <div class="repo-header">
+                                <div>
+                                    <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer" class="repo-title">${repo.full_name}</a>
+                                    <p class="repo-description">${repo.description || 'No description'}</p>
+                                </div>
+                            </div>
+                            <div class="repo-meta">
+                                <span>⭐ ${repo.stargazers_count.toLocaleString()}</span>
+                                <span>🔀 ${repo.forks_count.toLocaleString()}</span>
+                                <span>💻 ${repo.language || 'N/A'}</span>
+                            </div>
+                            <div class="repo-actions">
+                                <button class="btn-small" onclick="addToFavoritesFromDashboard('${JSON.stringify(repo).replace(/'/g, "&#39;")}', '${token}')">❤️ Add to Favorites</button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p>Failed to load recommendations</p>';
+                }
+            } catch (error) {
+                container.innerHTML = '<p>Error loading recommendations</p>';
+            }
+        }
+
+        function showDashboardError(message) {
+            const errorEl = document.getElementById('dashError');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function hideDashboardError() {
+            const errorEl = document.getElementById('dashError');
+            errorEl.style.display = 'none';
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('githubSearchUserToken');
+            location.reload();
+        }
+
+        function showSaveSearchModal() {
+            const name = prompt('Enter a name for this search:');
+            if (!name) return;
+            const query = document.getElementById('dashQuery').value;
+            if (!query) {
+                alert('Please perform a search first');
+                return;
+            }
+            // Would implement save search here
+            alert('Save search feature coming soon!');
+        }
+
+        function showCreateCollectionModal() {
+            alert('Create collection feature coming soon!');
+        }
+
+        function addToCollectionFromDashboard(repoId) {
+            alert('Add to collection feature coming soon!');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initializeApp);
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
