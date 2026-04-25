@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import secrets
 from uuid import uuid4
+from typing import Dict
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
@@ -14,6 +15,9 @@ from app.services.cache import get_redis
 logger = get_logger(__name__)
 
 _SESSION_TTL = 30 * 24 * 60 * 60
+
+# Temporary in-memory session store for when Redis is unavailable
+_temp_sessions: Dict[str, str] = {}
 
 
 def _profile_key(user_id: str) -> str:
@@ -49,25 +53,33 @@ async def get_user_profile(user_id: str) -> UserProfile | None:
 async def create_or_update_user_profile(profile: UserProfile) -> None:
     redis = await get_redis()
     if redis is None:
-        return None
+        logger.warning("create_or_update_user_profile: Redis unavailable, skipping profile storage")
+        return
     await redis.set(_profile_key(profile.user_id), json.dumps(profile.model_dump()))
 
 
 async def get_user_by_session_token(token: str) -> str | None:
     redis = await get_redis()
-    if redis is None:
-        return None
-    return await redis.get(_session_key(token))
+    if redis is not None:
+        return await redis.get(_session_key(token))
+
+    # Fallback to temporary in-memory store
+    return _temp_sessions.get(token)
 
 
 async def create_session_for_user(user_id: str) -> str:
     redis = await get_redis()
-    if redis is None:
-        raise RuntimeError("Redis is required for session storage")
     token = secrets.token_urlsafe(32)
-    settings = get_settings()
-    ttl = getattr(settings, "user_session_ttl_seconds", _SESSION_TTL)
-    await redis.setex(_session_key(token), ttl, user_id)
+
+    if redis is not None:
+        settings = get_settings()
+        ttl = getattr(settings, "user_session_ttl_seconds", _SESSION_TTL)
+        await redis.setex(_session_key(token), ttl, user_id)
+    else:
+        logger.warning("create_session_for_user: Redis unavailable, using temporary in-memory session")
+        # Store in temporary memory (not persistent, but allows login to work)
+        _temp_sessions[token] = user_id
+
     return token
 
 

@@ -137,11 +137,21 @@ async def google_callback(code: str = Query(...), state: str = Query(None)) -> R
                     "grant_type": "authorization_code",
                 },
             )
-            token_response.raise_for_status()
+
+            if not token_response.is_success:
+                logger.error("OAuth callback: Token exchange failed",
+                           status=token_response.status_code,
+                           response=token_response.text)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to exchange authorization code for tokens.",
+                )
+
             token_data = token_response.json()
 
         id_token_str = token_data.get("id_token")
         if not id_token_str:
+            logger.error("OAuth callback: No ID token in response", token_data_keys=list(token_data.keys()))
             raise ValueError("No ID token in response")
 
         # Verify the ID token
@@ -150,29 +160,39 @@ async def google_callback(code: str = Query(...), state: str = Query(None)) -> R
             google_requests.Request(),
             settings.google_oauth_client_id,
         )
+    except HTTPException:
+        raise
     except Exception as exc:
+        logger.exception("OAuth callback: Unexpected error during OAuth flow")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"OAuth callback failed: {str(exc)}",
         ) from exc
 
-    # Create/update user profile
-    user_id = f"google:{id_info['sub']}"
-    profile = UserProfile(
-        user_id=user_id,
-        email=id_info.get("email"),
-        name=id_info.get("name", id_info.get("email", user_id)),
-        avatar_url=id_info.get("picture"),
-    )
+    try:
+        # Create/update user profile
+        user_id = f"google:{id_info['sub']}"
+        profile = UserProfile(
+            user_id=user_id,
+            email=id_info.get("email"),
+            name=id_info.get("name", id_info.get("email", user_id)),
+            avatar_url=id_info.get("picture"),
+        )
 
-    await create_or_update_user_profile(profile)
-    access_token = await create_session_for_user(user_id)
+        await create_or_update_user_profile(profile)
+        access_token = await create_session_for_user(user_id)
 
-    # Redirect back to homepage with access token in URL
-    return RedirectResponse(
-        url=f"/?token={access_token}&name={profile.name}",
-        status_code=status.HTTP_302_FOUND,
-    )
+        # Redirect back to homepage with access token in URL
+        return RedirectResponse(
+            url=f"/?token={access_token}&name={profile.name}",
+            status_code=status.HTTP_302_FOUND,
+        )
+    except Exception as exc:
+        logger.exception("OAuth callback: Error during user creation/session")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"User creation failed: {str(exc)}",
+        ) from exc
 
 @router.get("/me", response_model=UserProfileResponse, summary="Get current user profile")
 async def get_current_profile(user: UserProfile = Depends(get_current_user)) -> UserProfileResponse:
