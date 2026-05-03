@@ -146,6 +146,56 @@ async def list_collections(user_id: str) -> list[CollectionItem]:
     return [CollectionItem.model_validate(json.loads(raw)) for raw in values if raw]
 
 
+async def update_collection(user_id: str, collection_id: str, data: CollectionCreate) -> CollectionItem:
+    redis = await get_redis()
+    if redis is None:
+        raise RuntimeError("Redis is required for collections")
+    raw = await redis.hget(_collections_key(user_id), collection_id)
+    if not raw:
+        raise ValueError("Collection not found")
+    item = CollectionItem.model_validate(json.loads(raw))
+    item.name = data.name
+    if data.description is not None:
+        item.description = data.description
+    await redis.hset(_collections_key(user_id), mapping={collection_id: json.dumps(item.model_dump())})
+    return item
+
+
+async def delete_collection(user_id: str, collection_id: str) -> None:
+    redis = await get_redis()
+    if redis is None:
+        return
+    await redis.hdel(_collections_key(user_id), collection_id)
+
+
+async def add_repo_to_collection(user_id: str, collection_id: str, repo_id: int) -> CollectionItem:
+    redis = await get_redis()
+    if redis is None:
+        raise RuntimeError("Redis is required for collections")
+    raw = await redis.hget(_collections_key(user_id), collection_id)
+    if not raw:
+        raise ValueError("Collection not found")
+    item = CollectionItem.model_validate(json.loads(raw))
+    if repo_id not in item.repo_ids:
+        item.repo_ids.append(repo_id)
+        await redis.hset(_collections_key(user_id), mapping={collection_id: json.dumps(item.model_dump())})
+    return item
+
+
+async def remove_repo_from_collection(user_id: str, collection_id: str, repo_id: int) -> CollectionItem:
+    redis = await get_redis()
+    if redis is None:
+        raise RuntimeError("Redis is required for collections")
+    raw = await redis.hget(_collections_key(user_id), collection_id)
+    if not raw:
+        raise ValueError("Collection not found")
+    item = CollectionItem.model_validate(json.loads(raw))
+    if repo_id in item.repo_ids:
+        item.repo_ids.remove(repo_id)
+        await redis.hset(_collections_key(user_id), mapping={collection_id: json.dumps(item.model_dump())})
+    return item
+
+
 async def update_user_github_token(user_id: str, github_token: str, github_username: str | None = None) -> None:
     profile = await get_user_profile(user_id)
     if not profile:

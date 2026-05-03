@@ -1629,6 +1629,9 @@
         const skeletonState = document.getElementById('skeletonState');
         const insightPanel = document.getElementById('insightPanel');
         let intelligenceRequestId = 0;
+        let lastSearchResults = {};
+        let userProfile = null;
+        let userFavorites = new Set();
 
         function escapeHtml(value) {
             return String(value)
@@ -1739,6 +1742,156 @@
             }
         }
 
+        async function fetchWithAuth(path, opts = {}) {
+            const token = localStorage.getItem('repoSearchUserToken');
+            const headers = opts.headers ? {...opts.headers} : {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch(path, {...opts, headers});
+            return res;
+        }
+
+        async function loadProfileIfAuthenticated() {
+            const token = localStorage.getItem('repoSearchUserToken');
+            if (!token) return;
+            try {
+                const res = await fetchWithAuth('/api/v1/users/me');
+                if (!res.ok) {
+                    // token invalid or expired
+                    localStorage.removeItem('repoSearchUserToken');
+                    return;
+                }
+                userProfile = await res.json();
+                // load favorites
+                const favRes = await fetchWithAuth('/api/v1/user/favorites');
+                if (favRes.ok) {
+                    const favs = await favRes.json();
+                    userFavorites = new Set((favs || []).map(r => String(r.id)));
+                }
+                renderAuthAvatar();
+            } catch (err) {
+                console.warn('Failed to load profile', err);
+            }
+        }
+
+        function renderAuthAvatar() {
+            const navActions = document.querySelector('.nav-actions');
+            if (!navActions) return;
+            navActions.innerHTML = '';
+            if (!userProfile) {
+                const btn = document.createElement('button');
+                btn.className = 'primary-btn';
+                btn.id = 'signInBtn';
+                btn.type = 'button';
+                btn.textContent = 'Sign in with Google';
+                btn.addEventListener('click', openGoogleSignIn);
+                navActions.appendChild(btn);
+                return;
+            }
+
+            const avatar = document.createElement('div');
+            avatar.id = 'authAvatar';
+            avatar.className = 'avatar';
+            avatar.style.cursor = 'pointer';
+            avatar.title = userProfile.name || userProfile.email || 'Profile';
+
+            if (userProfile.avatar_url) {
+                const img = document.createElement('img');
+                img.src = userProfile.avatar_url;
+                img.alt = userProfile.name || '';
+                avatar.appendChild(img);
+            } else {
+                const initials = (userProfile.name || userProfile.email || 'U').split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase();
+                avatar.textContent = initials;
+                avatar.style.display = 'flex';
+                avatar.style.alignItems = 'center';
+                avatar.style.justifyContent = 'center';
+                avatar.style.width = '40px';
+                avatar.style.height = '40px';
+                avatar.style.borderRadius = '999px';
+                avatar.style.background = '#0f1724';
+                avatar.style.color = '#fff';
+            }
+
+            // dropdown
+            const menu = document.createElement('div');
+            menu.id = 'authMenu';
+            menu.className = 'auth-menu';
+            menu.style.position = 'absolute';
+            menu.style.right = '12px';
+            menu.style.top = '64px';
+            menu.style.background = '#fff';
+            menu.style.border = '1px solid rgba(2,6,23,.08)';
+            menu.style.boxShadow = '0 10px 30px rgba(2,6,23,.12)';
+            menu.style.padding = '8px';
+            menu.style.borderRadius = '8px';
+            menu.style.display = 'none';
+            menu.style.zIndex = 60;
+
+            const makeItem = (label, cb) => {
+                const item = document.createElement('div');
+                item.className = 'auth-menu-item';
+                item.style.padding = '8px 12px';
+                item.style.cursor = 'pointer';
+                item.textContent = label;
+                item.addEventListener('click', () => {
+                    cb();
+                    menu.style.display = 'none';
+                });
+                return item;
+            };
+
+            menu.appendChild(makeItem('My Profile', () => openProfileModal()));
+            menu.appendChild(makeItem('My Favorites', () => openProfileModal('favorites')));
+            menu.appendChild(makeItem('My Collections', () => openProfileModal('collections')));
+            menu.appendChild(makeItem('Recommendations', () => openProfileModal('recommendations')));
+            menu.appendChild(makeItem('Sign out', () => {
+                localStorage.removeItem('repoSearchUserToken');
+                userProfile = null;
+                userFavorites = new Set();
+                renderAuthAvatar();
+            }));
+
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'relative';
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(menu);
+            avatar.addEventListener('click', () => {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            });
+
+            navActions.appendChild(wrapper);
+        }
+
+        async function openProfileModal(section = 'profile') {
+            let html = `<h3>${escapeHtml(userProfile.name || userProfile.email)}</h3><p>${escapeHtml(userProfile.email || '')}</p>`;
+            if (section === 'favorites') {
+                const res = await fetchWithAuth('/api/v1/user/favorites');
+                const favs = res.ok ? await res.json() : [];
+                html += `<h4>Favorites</h4><ul>` + (favs.map(r => `<li>${escapeHtml(r.full_name)} <button data-id="${r.id}" class="remove-fav">Remove</button></li>`).join('') || '<li>No favorites yet</li>') + `</ul>`;
+            } else if (section === 'collections') {
+                const res = await fetchWithAuth('/api/v1/user/collections');
+                const cols = res.ok ? await res.json() : [];
+                html += `<h4>Collections</h4><ul>` + (cols.map(c => `<li>${escapeHtml(c.name)} (${(c.repo_ids||[]).length})</li>`).join('') || '<li>No collections yet</li>') + `</ul>`;
+            } else if (section === 'recommendations') {
+                const res = await fetchWithAuth('/api/v1/user/recommendations');
+                const recs = res.ok ? await res.json() : [];
+                html += `<h4>Recommendations</h4><ul>` + (recs.map(r => `<li>${escapeHtml(r.full_name)}</li>`).join('') || '<li>No recommendations</li>') + `</ul>`;
+            } else {
+                html += `<p>GitHub: ${escapeHtml(userProfile.github_username || 'Not connected')}</p>`;
+            }
+
+            showModal(html);
+
+            document.querySelectorAll('.remove-fav').forEach(btn => btn.addEventListener('click', async (e) => {
+                const id = btn.dataset.id;
+                const res = await fetchWithAuth(`/api/v1/user/favorites/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    btn.parentElement.remove();
+                    userFavorites.delete(String(id));
+                }
+            }));
+        }
+
         function handleOAuthCallback() {
             const params = new URLSearchParams(window.location.search);
             const token = params.get('token');
@@ -1807,6 +1960,10 @@
                 return;
             }
 
+            // store results for actions like favorite toggles
+            lastSearchResults = {};
+            (data.results || []).forEach(r => { if (r && r.full_name) lastSearchResults[r.full_name] = r; });
+
             resultsList.innerHTML = data.results.map((repo) => `
                 <article class="repo-card">
                     <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;">
@@ -1834,9 +1991,10 @@
                             ${repo.topics.slice(0, 8).map((topic) => `<span class="repo-tag">${escapeHtml(topic)}</span>`).join('')}
                         </div>
                     ` : ''}
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
                         <button class="secondary-btn" type="button" onclick="openSummary('${escapeHtml(repo.full_name)}')">View summary</button>
                         <button class="secondary-btn" type="button" onclick="openStarter('${escapeHtml(repo.full_name)}')">Get starter guide</button>
+                        <button class="secondary-btn favorite-btn" data-fullname="${escapeHtml(repo.full_name)}" data-repoid="${escapeHtml(String(repo.id))}" type="button">☆ Favorite</button>
                     </div>
                 </article>
             `).join('');
@@ -1851,6 +2009,37 @@
                 const selected = document.querySelectorAll('.compare-checkbox:checked').length;
                 document.getElementById('compareBtn').disabled = selected < 2;
             }));
+
+            // wire favorite buttons
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                const fullname = btn.dataset.fullname;
+                const repoid = btn.dataset.repoid;
+                const isFav = userFavorites && userFavorites.has(String(repoid));
+                btn.textContent = isFav ? '★ Favorited' : '☆ Favorite';
+                btn.addEventListener('click', async () => {
+                    const repo = lastSearchResults[fullname];
+                    if (!repo) return;
+                    if (userProfile) {
+                        if (userFavorites.has(String(repoid))) {
+                            const res = await fetchWithAuth(`/api/v1/user/favorites/${repoid}`, { method: 'DELETE' });
+                            if (res.ok) {
+                                userFavorites.delete(String(repoid));
+                                btn.textContent = '☆ Favorite';
+                            }
+                        } else {
+                            const res = await fetchWithAuth('/api/v1/user/favorites', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(repo) });
+                            if (res.ok) {
+                                userFavorites.add(String(repoid));
+                                btn.textContent = '★ Favorited';
+                            } else {
+                                alert('Failed to add favorite');
+                            }
+                        }
+                    } else {
+                        openGoogleSignIn();
+                    }
+                });
+            });
         }
 
         async function searchRepositories() {
@@ -1915,7 +2104,11 @@
 
         function bootstrap() {
             handleOAuthCallback();
-            signInBtn.addEventListener('click', openGoogleSignIn);
+            // initialize auth state and UI
+            loadProfileIfAuthenticated().then(() => {
+                // render avatar or sign-in button
+                renderAuthAvatar();
+            });
             footerSignInLink?.addEventListener('click', (event) => {
                 event.preventDefault();
                 openGoogleSignIn();

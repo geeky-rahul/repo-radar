@@ -100,6 +100,9 @@ def create_app() -> FastAPI:
     app.include_router(search.router, prefix="/api/v1", tags=["search"])
     app.include_router(intelligence_router, prefix="/api/v1", tags=["intelligence"])
     app.include_router(users_router, prefix="/api/v1", tags=["users"])
+    # singular user aliases
+    from app.api.v1.user import router as user_router
+    app.include_router(user_router, prefix="/api/v1", tags=["user"])
 
     # Static files
     static_dir = Path(__file__).parent / "static"
