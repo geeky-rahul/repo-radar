@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -895,12 +896,14 @@
             display: none;
             align-items: center;
             justify-content: center;
-            background: rgba(2,6,23,0.6);
+            background: rgba(2, 6, 23, 0.6);
             z-index: 120;
             padding: 20px;
         }
 
-        .modal.open { display: grid; }
+        .modal.open {
+            display: grid;
+        }
 
         .modal-content {
             width: min(920px, 100%);
@@ -908,8 +911,8 @@
             overflow: auto;
             padding: 20px;
             border-radius: 14px;
-            background: linear-gradient(180deg, rgba(10,15,25,0.98), rgba(6,10,18,0.99));
-            border: 1px solid rgba(148,163,184,0.12);
+            background: linear-gradient(180deg, rgba(10, 15, 25, 0.98), rgba(6, 10, 18, 0.99));
+            border: 1px solid rgba(148, 163, 184, 0.12);
         }
 
         .modal-close {
@@ -1070,10 +1073,27 @@
             background: rgba(148, 163, 184, 0.12);
         }
 
-        .skeleton-line { height: 14px; width: 42%; margin-bottom: 12px; }
-        .skeleton-line.short { width: 28%; }
-        .skeleton-pill { height: 14px; width: 90px; }
-        .skeleton-block { height: 16px; width: 100%; margin-top: 12px; border-radius: 12px; }
+        .skeleton-line {
+            height: 14px;
+            width: 42%;
+            margin-bottom: 12px;
+        }
+
+        .skeleton-line.short {
+            width: 28%;
+        }
+
+        .skeleton-pill {
+            height: 14px;
+            width: 90px;
+        }
+
+        .skeleton-block {
+            height: 16px;
+            width: 100%;
+            margin-top: 12px;
+            border-radius: 12px;
+        }
 
         .skeleton-row {
             display: flex;
@@ -1124,18 +1144,32 @@
             animation: fadeUp 0.8s ease both;
         }
 
-        .reveal.delay-1 { animation-delay: 0.08s; }
-        .reveal.delay-2 { animation-delay: 0.16s; }
-        .reveal.delay-3 { animation-delay: 0.24s; }
-        .reveal.delay-4 { animation-delay: 0.32s; }
+        .reveal.delay-1 {
+            animation-delay: 0.08s;
+        }
 
-        .is-hidden { display: none !important; }
+        .reveal.delay-2 {
+            animation-delay: 0.16s;
+        }
+
+        .reveal.delay-3 {
+            animation-delay: 0.24s;
+        }
+
+        .reveal.delay-4 {
+            animation-delay: 0.32s;
+        }
+
+        .is-hidden {
+            display: none !important;
+        }
 
         @keyframes fadeUp {
             from {
                 opacity: 0;
                 transform: translateY(18px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1143,11 +1177,15 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         @keyframes shimmer {
-            to { transform: translateX(100%); }
+            to {
+                transform: translateX(100%);
+            }
         }
 
         @media (max-width: 1120px) {
@@ -1266,7 +1304,7 @@
             font-size: 1.5rem;
             font-weight: 700;
         }
-        
+
         .profile-avatar img {
             width: 100%;
             height: 100%;
@@ -1338,10 +1376,13 @@
         .profile-tab span.icon {
             font-size: 1.1rem;
         }
-        
+
 
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
+
+            *,
+            *::before,
+            *::after {
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
@@ -1350,6 +1391,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="page">
         <header class="nav reveal">
@@ -1375,10 +1417,12 @@
         <main id="top">
             <section class="hero">
                 <div class="hero-copy reveal delay-1">
-                    <span class="eyebrow"><span class="eyebrow-dot"></span> Production-grade GitHub search for modern teams</span>
+                    <span class="eyebrow"><span class="eyebrow-dot"></span> Production-grade GitHub search for modern
+                        teams</span>
                     <h1>Search GitHub Repositories Smarter</h1>
                     <p>
-                        RepoSearch turns natural language into precise GitHub queries, ranks results by quality and freshness,
+                        RepoSearch turns natural language into precise GitHub queries, ranks results by quality and
+                        freshness,
                         and gives developers a fast, polished search experience.
                     </p>
 
@@ -1398,15 +1442,18 @@
                     <div class="hero-proof">
                         <div class="proof-card reveal delay-2">
                             <strong>Natural language</strong>
-                            <span>Ask for “best beginner Python chatbot projects” and get structured filters automatically.</span>
+                            <span>Ask for “best beginner Python chatbot projects” and get structured filters
+                                automatically.</span>
                         </div>
                         <div class="proof-card reveal delay-3">
                             <strong>Fast responses</strong>
-                            <span>Optimized pipeline with caching, fallback parsing, and ranked output for quick discovery.</span>
+                            <span>Optimized pipeline with caching, fallback parsing, and ranked output for quick
+                                discovery.</span>
                         </div>
                         <div class="proof-card reveal delay-4">
                             <strong>Premium UX</strong>
-                            <span>A polished SaaS shell with clear hierarchy, depth, and responsive behavior on every screen.</span>
+                            <span>A polished SaaS shell with clear hierarchy, depth, and responsive behavior on every
+                                screen.</span>
                         </div>
                     </div>
                 </div>
@@ -1420,7 +1467,8 @@
                                 <span></span>
                             </div>
                             <div class="command-bar">
-                                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
                                     <circle cx="11" cy="11" r="7"></circle>
                                     <path d="M20 20l-3.5-3.5"></path>
                                 </svg>
@@ -1440,7 +1488,8 @@
                                 <div class="preview-card-header">
                                     <div>
                                         <h3>gunthercox / ChatterBot</h3>
-                                        <p>Conversational engine with strong community adoption, clean documentation, and a long-running ecosystem.</p>
+                                        <p>Conversational engine with strong community adoption, clean documentation,
+                                            and a long-running ecosystem.</p>
                                     </div>
                                     <span class="score-chip">92.4%</span>
                                 </div>
@@ -1450,7 +1499,8 @@
                                 <div class="preview-card-header">
                                     <div>
                                         <h3>microsoft / semantic-kernel</h3>
-                                        <p>Framework for building AI apps with repository freshness, broad language support, and active development.</p>
+                                        <p>Framework for building AI apps with repository freshness, broad language
+                                            support, and active development.</p>
                                     </div>
                                     <span class="score-chip">89.1%</span>
                                 </div>
@@ -1479,25 +1529,37 @@
                 <div class="section-heading">
                     <div>
                         <h2>Built like a real SaaS product</h2>
-                        <p>Designed to feel closer to GitHub, Vercel, or Linear than a typical demo page, with clear structure and strong visual hierarchy.</p>
+                        <p>Designed to feel closer to GitHub, Vercel, or Linear than a typical demo page, with clear
+                            structure and strong visual hierarchy.</p>
                     </div>
                 </div>
 
                 <div class="feature-grid">
                     <article class="feature-card">
                         <div class="feature-icon">
+<<<<<<< HEAD
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+=======
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"
+                                stroke-linejoin="round" aria-hidden="true">
+>>>>>>> 603ab5673d9eb84126b4a3063ac04561d434c7b5
                                 <path d="M4 12h16"></path>
                                 <path d="M12 4v16"></path>
                             </svg>
                         </div>
                         <h3>AI parsing with fallback</h3>
-                        <p>Natural language requests are transformed into structured GitHub filters, with a rule-based fallback to keep the experience resilient.</p>
+                        <p>Natural language requests are transformed into structured GitHub filters, with a rule-based
+                            fallback to keep the experience resilient.</p>
                     </article>
 
                     <article class="feature-card">
                         <div class="feature-icon">
+<<<<<<< HEAD
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+=======
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"
+                                stroke-linejoin="round" aria-hidden="true">
+>>>>>>> 603ab5673d9eb84126b4a3063ac04561d434c7b5
                                 <path d="M12 3v4"></path>
                                 <path d="M12 17v4"></path>
                                 <path d="M5 12H1"></path>
@@ -1506,19 +1568,26 @@
                             </svg>
                         </div>
                         <h3>Fast, ranked search</h3>
-                        <p>Results are scored for popularity, recency, completeness, activity, and health so the best repositories surface first.</p>
+                        <p>Results are scored for popularity, recency, completeness, activity, and health so the best
+                            repositories surface first.</p>
                     </article>
 
                     <article class="feature-card">
                         <div class="feature-icon">
+<<<<<<< HEAD
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+=======
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"
+                                stroke-linejoin="round" aria-hidden="true">
+>>>>>>> 603ab5673d9eb84126b4a3063ac04561d434c7b5
                                 <path d="M4 6h16"></path>
                                 <path d="M4 12h10"></path>
                                 <path d="M4 18h14"></path>
                             </svg>
                         </div>
                         <h3>Structured developer workflow</h3>
-                        <p>From a sticky navigation bar to a centered app shell and results placeholder, the interface reads like a polished product experience.</p>
+                        <p>From a sticky navigation bar to a centered app shell and results placeholder, the interface
+                            reads like a polished product experience.</p>
                     </article>
                 </div>
             </section>
@@ -1529,7 +1598,9 @@
                         <div>
                             <h2>Search GitHub repositories</h2>
                             <p>
-                                Use the app below to run repository searches with a clean, focused workflow. The results panel below updates in place with ranked repositories, query metadata, and loading states.
+                                Use the app below to run repository searches with a clean, focused workflow. The results
+                                panel below updates in place with ranked repositories, query metadata, and loading
+                                states.
                             </p>
                         </div>
 
@@ -1549,12 +1620,14 @@
                                 </div>
                                 <div class="input-shell">
                                     <span class="field-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"
+                                            stroke-linejoin="round">
                                             <circle cx="11" cy="11" r="7"></circle>
                                             <path d="M20 20l-3.5-3.5"></path>
                                         </svg>
                                     </span>
-                                    <input id="query" name="query" type="text" placeholder="e.g. best beginner Python chatbot project" required>
+                                    <input id="query" name="query" type="text"
+                                        placeholder="e.g. best beginner Python chatbot project" required>
                                 </div>
                             </div>
 
@@ -1566,13 +1639,15 @@
                                     </div>
                                     <div class="input-shell">
                                         <span class="field-icon" aria-hidden="true">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+                                                stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M7 8l-4 4 4 4"></path>
                                                 <path d="M17 8l4 4-4 4"></path>
                                                 <path d="M14 5l-4 14"></path>
                                             </svg>
                                         </span>
-                                        <input id="language" name="language" type="text" placeholder="python, javascript, go">
+                                        <input id="language" name="language" type="text"
+                                            placeholder="python, javascript, go">
                                     </div>
                                 </div>
 
@@ -1583,8 +1658,11 @@
                                     </div>
                                     <div class="input-shell">
                                         <span class="field-icon" aria-hidden="true">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M12 3.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"></path>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path
+                                                    d="M12 3.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z">
+                                                </path>
                                             </svg>
                                         </span>
                                         <input id="minStars" name="minStars" type="number" min="0" placeholder="100">
@@ -1598,7 +1676,8 @@
                                     </div>
                                     <div class="input-shell">
                                         <span class="field-icon" aria-hidden="true">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+                                                stroke-linecap="round" stroke-linejoin="round">
                                                 <rect x="3" y="4" width="18" height="17" rx="3"></rect>
                                                 <path d="M16 2v4"></path>
                                                 <path d="M8 2v4"></path>
@@ -1616,7 +1695,8 @@
                                     </div>
                                     <div class="input-shell">
                                         <span class="field-icon" aria-hidden="true">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+                                                stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M4 6h16"></path>
                                                 <path d="M4 12h16"></path>
                                                 <path d="M4 18h16"></path>
@@ -1650,7 +1730,8 @@
                         <div class="results-header">
                             <div>
                                 <h3>Results</h3>
-                                <div class="results-meta" id="resultStats">Search for a repository to see ranked results, parsed filters, and response timing.</div>
+                                <div class="results-meta" id="resultStats">Search for a repository to see ranked
+                                    results, parsed filters, and response timing.</div>
                             </div>
                             <div class="status-row">
                                 <span class="status-chip">Loading skeleton ready</span>
@@ -1663,7 +1744,8 @@
 
                         <div class="empty-panel" id="emptyState">
                             <h3>Ready for your first search</h3>
-                            <p>Try a query like “best beginner Python chatbot project” and refine it with language, stars, or push date filters. Results will render here as polished repository cards.</p>
+                            <p>Try a query like “best beginner Python chatbot project” and refine it with language,
+                                stars, or push date filters. Results will render here as polished repository cards.</p>
                         </div>
 
                         <div class="insight-panel is-hidden" id="insightPanel"></div>
@@ -1695,14 +1777,45 @@
                     </section>
                 </div>
             </section>
+            <section class="section reveal delay-3" id="trending">
+                <div class="section-heading">
+                    <div>
+                        <h2>Trending Repositories</h2>
+                        <p>Today / Weekly trending repos. Based on: stars gained in last 24h / 7 days, forks growth,
+                            contributor activity.</p>
+                    </div>
+                </div>
 
+                <div class="app-shell">
+                    <div class="app-shell-header">
+                        <div>
+                            <h3>Rising Projects</h3>
+                            <p>Repositories rapidly gaining traction in the community.</p>
+                        </div>
+                        <div class="status-row">
+                            <span class="status-chip">Updated Hourly</span>
+                            <span class="status-chip">Momentum Scoring</span>
+                        </div>
+                    </div>
+
+                    <div class="loading" id="trendingLoading" style="display: flex; margin: 20px 0;">
+                        <div class="spinner" aria-hidden="true"></div>
+                        <span>Fetching trending projects...</span>
+                    </div>
+
+                    <div class="error" id="trendingError" role="alert" style="display: none; margin: 20px 0;"></div>
+
+                    <div class="results-grid is-hidden" id="trendingList"></div>
+                </div>
+            </section>
         </main>
 
         <footer class="footer reveal delay-4">
             <div class="footer-grid">
                 <div>
                     <strong>RepoSearch</strong>
-                    <span class="copyright">A premium GitHub repository search interface built for clarity, speed, and scale.</span>
+                    <span class="copyright">A premium GitHub repository search interface built for clarity, speed, and
+                        scale.</span>
                 </div>
                 <div>
                     <strong>Product</strong>
@@ -1853,9 +1966,9 @@
 
         async function fetchWithAuth(path, opts = {}) {
             const token = localStorage.getItem('repoSearchUserToken');
-            const headers = opts.headers ? {...opts.headers} : {};
+            const headers = opts.headers ? { ...opts.headers } : {};
             if (token) headers['Authorization'] = `Bearer ${token}`;
-            const res = await fetch(path, {...opts, headers});
+            const res = await fetch(path, { ...opts, headers });
             return res;
         }
 
@@ -1893,7 +2006,7 @@
 
             if (!navActions) return;
             navActions.innerHTML = '';
-            
+
             if (!userProfile) {
                 const btn = document.createElement('button');
                 btn.className = 'primary-btn';
@@ -1902,7 +2015,7 @@
                 btn.textContent = 'Sign in with Google';
                 btn.addEventListener('click', openGoogleSignIn);
                 navActions.appendChild(btn);
-                
+
                 if (appShellHeader) appShellHeader.style.display = 'flex';
                 document.querySelector('.nav').style.display = 'flex';
                 document.querySelector('.hero').style.display = 'grid';
@@ -1930,7 +2043,7 @@
                 img.style.objectFit = 'cover';
                 navAvatar.appendChild(img);
             } else {
-                const initials = (userProfile.name || userProfile.email || 'U').split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase();
+                const initials = (userProfile.name || userProfile.email || 'U').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
                 navAvatar.textContent = initials;
                 navAvatar.style.display = 'flex';
                 navAvatar.style.alignItems = 'center';
@@ -1941,7 +2054,7 @@
                 navAvatar.style.background = '#0f1724';
                 navAvatar.style.color = '#fff';
             }
-            
+
             navAvatar.addEventListener('click', () => {
                 const dashboard = document.getElementById('profileDashboard');
                 if (dashboard) {
@@ -1958,7 +2071,7 @@
             if (userProfile.avatar_url) {
                 avatarContent = `<img src="${escapeHtml(userProfile.avatar_url)}" alt="${escapeHtml(userProfile.name || '')}">`;
             } else {
-                avatarContent = (userProfile.name || userProfile.email || 'U').split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase();
+                avatarContent = (userProfile.name || userProfile.email || 'U').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
             }
 
             dashboard.innerHTML = `
@@ -1997,7 +2110,7 @@
                 tab.addEventListener('click', () => {
                     tabs.forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
-                    
+
                     const tabId = tab.dataset.tab;
                     if (tabId === 'search') {
                         closeModal();
@@ -2021,7 +2134,7 @@
             } else if (section === 'collections') {
                 const res = await fetchWithAuth('/api/v1/user/collections');
                 const cols = res.ok ? await res.json() : [];
-                html += `<h4>Collections</h4><ul>` + (cols.map(c => `<li>${escapeHtml(c.name)} (${(c.repo_ids||[]).length})</li>`).join('') || '<li>No collections yet</li>') + `</ul>`;
+                html += `<h4>Collections</h4><ul>` + (cols.map(c => `<li>${escapeHtml(c.name)} (${(c.repo_ids || []).length})</li>`).join('') || '<li>No collections yet</li>') + `</ul>`;
             } else if (section === 'recommendations') {
                 const res = await fetchWithAuth('/api/v1/user/recommendations');
                 const recs = res.ok ? await res.json() : [];
@@ -2177,7 +2290,7 @@
                                 btn.textContent = '☆ Favorite';
                             }
                         } else {
-                            const res = await fetchWithAuth('/api/v1/user/favorites', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(repo) });
+                            const res = await fetchWithAuth('/api/v1/user/favorites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(repo) });
                             if (res.ok) {
                                 userFavorites.add(String(repoid));
                                 btn.textContent = '★ Favorited';
@@ -2252,6 +2365,56 @@
             `;
         }
 
+        async function loadTrending() {
+            const loading = document.getElementById('trendingLoading');
+            const error = document.getElementById('trendingError');
+            const list = document.getElementById('trendingList');
+
+            try {
+                const res = await fetch('/api/v1/search/rising?top_k=3');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                if (loading) loading.style.display = 'none';
+
+                if (!data.results || data.results.length === 0) {
+                    if (list) list.innerHTML = '<div class="empty-panel"><p>No trending repositories found.</p></div>';
+                } else {
+                    if (list) list.innerHTML = data.results.map((repo) => `
+                        <article class="repo-card">
+                            <div class="repo-card-head">
+                                <div>
+                                    <div class="repo-title">
+                                        <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(repo.full_name)}</a>
+                                    </div>
+                                    <p class="repo-description">${escapeHtml(repo.description || 'No description available.')}</p>
+                                </div>
+                                <div class="repo-score" style="color: var(--accent-3);">🔥 Trending</div>
+                            </div>
+                            <div class="repo-meta" style="margin-top: 12px;">
+                                <div class="meta-item"><span class="meta-icon">★</span>${Number(repo.stargazers_count || 0).toLocaleString()} stars</div>
+                                <div class="meta-item"><span class="meta-icon">⑂</span>${Number(repo.forks_count || 0).toLocaleString()} forks</div>
+                                <div class="meta-item"><span class="meta-icon">⏱</span>${formatDate(repo.pushed_at)}</div>
+                                <div class="meta-item"><span class="meta-icon">💻</span>${escapeHtml(repo.language || 'Unknown')}</div>
+                            </div>
+                            ${Array.isArray(repo.topics) && repo.topics.length ? `
+                                <div class="repo-tags" style="margin-top: 12px;">
+                                    ${repo.topics.slice(0, 6).map((topic) => `<span class="repo-tag">${escapeHtml(topic)}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </article>
+                    `).join('');
+                }
+                if (list) list.classList.remove('is-hidden');
+            } catch (err) {
+                if (loading) loading.style.display = 'none';
+                if (error) {
+                    error.textContent = 'Failed to load trending repositories.';
+                    error.style.display = 'block';
+                }
+            }
+        }
+
         function bootstrap() {
             handleOAuthCallback();
             // initialize auth state and UI
@@ -2316,7 +2479,7 @@
                     <p><strong>How it works</strong>: ${escapeHtml(summary.how_it_works || '')}</p>
                     <p><strong>Complexity</strong>: ${escapeHtml(summary.complexity || '')}</p>
                     <h4>Key files</h4>
-                    <ul>${(summary.key_files || []).map(f=>`<li>${escapeHtml(f)}</li>`).join('')}</ul>
+                    <ul>${(summary.key_files || []).map(f => `<li>${escapeHtml(f)}</li>`).join('')}</ul>
                 `;
                 showModal(html);
             } catch (err) {
@@ -2335,11 +2498,11 @@
                 const html = `
                     <h3>${escapeHtml(fullName)} — starter guide</h3>
                     <h4>Install</h4>
-                    <ul>${(guide.install_dependencies || []).map(i=>`<li><code>${escapeHtml(i)}</code></li>`).join('')}</ul>
+                    <ul>${(guide.install_dependencies || []).map(i => `<li><code>${escapeHtml(i)}</code></li>`).join('')}</ul>
                     <h4>Run commands</h4>
-                    <ul>${(guide.run_commands || []).map(i=>`<li><code>${escapeHtml(i)}</code></li>`).join('')}</ul>
+                    <ul>${(guide.run_commands || []).map(i => `<li><code>${escapeHtml(i)}</code></li>`).join('')}</ul>
                     <h4>First things to try</h4>
-                    <ul>${(guide.first_things_to_try || []).map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul>
+                    <ul>${(guide.first_things_to_try || []).map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>
                 `;
                 showModal(html);
             } catch (err) {
@@ -2349,7 +2512,7 @@
 
         // Compare selected repositories
         async function compareSelected() {
-            const checked = Array.from(document.querySelectorAll('.compare-checkbox:checked')).map(cb => cb.dataset.fullname).slice(0,5);
+            const checked = Array.from(document.querySelectorAll('.compare-checkbox:checked')).map(cb => cb.dataset.fullname).slice(0, 5);
             if (checked.length < 2) {
                 alert('Select at least two repositories to compare.');
                 return;
@@ -2371,4 +2534,5 @@
         }
     </script>
 </body>
+
 </html>
