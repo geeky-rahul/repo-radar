@@ -1586,7 +1586,36 @@
                     </section>
                 </div>
             </section>
+            <section class="section reveal delay-3" id="trending">
+                <div class="section-heading">
+                    <div>
+                        <h2>Trending Repositories</h2>
+                        <p>Today / Weekly trending repos. Based on: stars gained in last 24h / 7 days, forks growth, contributor activity.</p>
+                    </div>
+                </div>
 
+                <div class="app-shell">
+                    <div class="app-shell-header">
+                        <div>
+                            <h3>Rising Projects</h3>
+                            <p>Repositories rapidly gaining traction in the community.</p>
+                        </div>
+                        <div class="status-row">
+                            <span class="status-chip">Updated Hourly</span>
+                            <span class="status-chip">Momentum Scoring</span>
+                        </div>
+                    </div>
+                    
+                    <div class="loading" id="trendingLoading" style="display: flex; margin: 20px 0;">
+                        <div class="spinner" aria-hidden="true"></div>
+                        <span>Fetching trending projects...</span>
+                    </div>
+
+                    <div class="error" id="trendingError" role="alert" style="display: none; margin: 20px 0;"></div>
+
+                    <div class="results-grid is-hidden" id="trendingList"></div>
+                </div>
+            </section>
         </main>
 
         <footer class="footer reveal delay-4">
@@ -1913,8 +1942,59 @@
             `;
         }
 
+        async function loadTrending() {
+            const loading = document.getElementById('trendingLoading');
+            const error = document.getElementById('trendingError');
+            const list = document.getElementById('trendingList');
+            
+            try {
+                const res = await fetch('/api/v1/search/rising?top_k=3');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                
+                if (loading) loading.style.display = 'none';
+                
+                if (!data.results || data.results.length === 0) {
+                    if (list) list.innerHTML = '<div class="empty-panel"><p>No trending repositories found.</p></div>';
+                } else {
+                    if (list) list.innerHTML = data.results.map((repo) => `
+                        <article class="repo-card">
+                            <div class="repo-card-head">
+                                <div>
+                                    <div class="repo-title">
+                                        <a href="${escapeHtml(repo.html_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(repo.full_name)}</a>
+                                    </div>
+                                    <p class="repo-description">${escapeHtml(repo.description || 'No description available.')}</p>
+                                </div>
+                                <div class="repo-score" style="color: var(--accent-3);">🔥 Trending</div>
+                            </div>
+                            <div class="repo-meta" style="margin-top: 12px;">
+                                <div class="meta-item"><span class="meta-icon">★</span>${Number(repo.stargazers_count || 0).toLocaleString()} stars</div>
+                                <div class="meta-item"><span class="meta-icon">⑂</span>${Number(repo.forks_count || 0).toLocaleString()} forks</div>
+                                <div class="meta-item"><span class="meta-icon">⏱</span>${formatDate(repo.pushed_at)}</div>
+                                <div class="meta-item"><span class="meta-icon">💻</span>${escapeHtml(repo.language || 'Unknown')}</div>
+                            </div>
+                            ${Array.isArray(repo.topics) && repo.topics.length ? `
+                                <div class="repo-tags" style="margin-top: 12px;">
+                                    ${repo.topics.slice(0, 6).map((topic) => `<span class="repo-tag">${escapeHtml(topic)}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </article>
+                    `).join('');
+                }
+                if (list) list.classList.remove('is-hidden');
+            } catch (err) {
+                if (loading) loading.style.display = 'none';
+                if (error) {
+                    error.textContent = 'Failed to load trending repositories.';
+                    error.style.display = 'block';
+                }
+            }
+        }
+
         function bootstrap() {
             handleOAuthCallback();
+            loadTrending();
             signInBtn.addEventListener('click', openGoogleSignIn);
             footerSignInLink?.addEventListener('click', (event) => {
                 event.preventDefault();
