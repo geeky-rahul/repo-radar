@@ -13,7 +13,8 @@ app/
 ├── api/
 │   └── v1/
 │       ├── search.py        # POST /api/v1/search/repositories
-│       └── health.py        # GET  /api/v1/health
+│       ├── health.py        # GET  /api/v1/health
+│       └── users.py         # Google auth, favorites, saved searches, recommendations
 ├── agents/
 │   └── query_agent.py       # LangChain LCEL pipeline (LLM → ParsedGitHubQuery)
 ├── tools/
@@ -21,9 +22,11 @@ app/
 ├── services/
 │   ├── search.py            # Orchestration: cache → parse → fetch → rank
 │   ├── ranking.py           # Composite scoring + sort
-│   └── cache.py             # Redis async cache (non-fatal on miss)
+│   ├── cache.py             # Redis async cache (non-fatal on miss)
+│   └── user.py              # User storage, sessions, favorites, saved searches, collections
 ├── schemas/
-│   └── search.py            # All Pydantic request/response models
+│   ├── search.py            # All Pydantic request/response models
+│   └── user.py              # User profile, auth, saved search & collection schemas
 ├── core/
 │   ├── config.py            # pydantic-settings (.env driven)
 │   ├── logging.py           # structlog configuration
@@ -166,8 +169,10 @@ uvicorn app.main:app --reload
 
 Authentication is handled with Google sign-in and bearer sessions.
 
+- `GET /api/v1/users/auth/config` — retrieve Google OAuth client configuration for frontend sign-in
 - `POST /api/v1/users/auth/google` — authenticate with a Google ID token, optionally attach a GitHub token for personalization
-- `GET /api/v1/users/me` — retrieve the user profile
+- `GET /api/v1/users/auth/callback` — OAuth callback endpoint for Google authorization code flow
+- `GET /api/v1/users/me` — retrieve the current user profile
 - `GET /api/v1/users/favorites` — list favorite repositories
 - `POST /api/v1/users/favorites` — add a repository to favorites
 - `DELETE /api/v1/users/favorites/{repo_id}` — remove a favorite
@@ -227,9 +232,12 @@ RANKING_TREND_WEIGHT=0.04
 | `LLM_TEMPERATURE` | `0.0` | Deterministic LLM output |
 | `REDIS_URL` | `redis://localhost:6379` | Cache backend |
 | `CACHE_TTL_SECONDS` | `300` | Cache entry lifetime |
-| `CACHE_ENABLED` | `true` | Disable for testing |
+| `CACHE_ENABLED` | `true` | Disable cache during local testing |
+| `GITHUB_API_BASE_URL` | `https://api.github.com` | GitHub REST API base URL |
 | `GITHUB_SEARCH_MAX_RESULTS` | `10` | Max repos fetched per request |
 | `GITHUB_REQUEST_TIMEOUT` | `10.0` | HTTP timeout in seconds |
+| `APP_URL` | `http://localhost:8000` | Base application URL used for OAuth redirects |
+| `APP_DEBUG` | `false` | Enable debug mode and permissive CORS for local development |
 | `RANKING_STARS_WEIGHT` | `0.45` | Star count influence |
 | `RANKING_RECENCY_WEIGHT` | `0.18` | Last push date influence |
 | `RANKING_COMPLETENESS_WEIGHT` | `0.15` | Metadata completeness influence |
