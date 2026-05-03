@@ -25,6 +25,8 @@ Repository: {repo_name}
 Languages: {languages}
 
 Rules:
+- The total summary across all fields MUST be a maximum of 200 words.
+- ALL output MUST be translated to English, regardless of the original README language.
 - What it does should be concise and accurate.
 - Who should use it should identify the target audience.
 - Use cases should list 2-3 specific scenarios where this repo shines.

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,7 +35,7 @@
         .header h1 {
             font-size: 3rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .header p {
@@ -46,7 +47,7 @@
             background: white;
             border-radius: 15px;
             padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
         }
 
@@ -185,7 +186,6 @@
 
         .results-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
         }
 
@@ -200,7 +200,7 @@
         }
 
         .repo-card:hover {
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
         }
 
@@ -210,7 +210,7 @@
             overflow: hidden;
             transition: max-height 0.4s ease, opacity 0.4s ease, margin-top 0.4s ease;
         }
-        
+
         .repo-card.expanded .repo-details {
             max-height: 500px;
             opacity: 1;
@@ -218,20 +218,20 @@
             border-top: 1px solid #e1e5e9;
             padding-top: 15px;
         }
-        
+
         .repo-details-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
             font-size: 13px;
         }
-        
+
         .repo-detail-item {
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
-        
+
         .repo-detail-label {
             font-weight: 600;
             color: #586069;
@@ -252,7 +252,7 @@
             background: white;
             border: 1px solid #e1e5e9;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             padding: 10px;
             width: 250px;
             z-index: 10;
@@ -260,11 +260,11 @@
             margin-top: 5px;
             cursor: default;
         }
-        
+
         .collection-dropdown.show {
             display: block;
         }
-        
+
         .collection-item {
             padding: 8px 10px;
             border-radius: 4px;
@@ -272,11 +272,11 @@
             transition: background 0.2s;
             font-size: 13px;
         }
-        
+
         .collection-item:hover {
             background: #f8f9fa;
         }
-        
+
         .new-collection-form {
             margin-top: 10px;
             padding-top: 10px;
@@ -284,7 +284,7 @@
             display: flex;
             gap: 5px;
         }
-        
+
         .new-collection-input {
             flex: 1;
             padding: 5px 8px;
@@ -431,6 +431,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header class="header">
@@ -466,13 +467,8 @@
             <section class="search-section">
                 <h2>🔍 Search GitHub Repositories</h2>
                 <form class="search-form" onsubmit="performSearch(event)">
-                    <input
-                        type="text"
-                        class="search-input"
-                        id="searchQuery"
-                        placeholder="e.g., python machine learning, react dashboard, golang web framework"
-                        required
-                    >
+                    <input type="text" class="search-input" id="searchQuery"
+                        placeholder="e.g., python machine learning, react dashboard, golang web framework" required>
                     <button type="submit" class="search-btn">Search</button>
                 </form>
 
@@ -482,7 +478,8 @@
                     <div class="options-grid">
                         <div class="option-group">
                             <label for="language">Language:</label>
-                            <input type="text" class="option-input" id="language" placeholder="python, javascript, go...">
+                            <input type="text" class="option-input" id="language"
+                                placeholder="python, javascript, go...">
                         </div>
                         <div class="option-group">
                             <label for="minStars">Min Stars:</label>
@@ -565,7 +562,7 @@
         let userCollections = [];
 
         // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             if (userToken) {
                 showLoggedInState();
             } else {
@@ -848,11 +845,11 @@
             container.innerHTML = `
                 <div class="results-grid">
                     ${results.map(repo => {
-                        const topicsHtml = (repo.topics || []).slice(0, 3).map(t => `<span style="background:#f1f8ff;color:#0366d6;padding:2px 8px;border-radius:12px;font-size:11px;">${t}</span>`).join(' ');
-                        const collectionsHtml = userCollections.map(c => `<div class="collection-item" onclick="addToCollection(event, '${c.id}', '${repo.id}', '${repo.name}', '${repo.owner.login}')">${c.name}</div>`).join('');
-                        
-                        return `
-                        <div class="repo-card" onclick="toggleRepoDetails(event, this)">
+                const topicsHtml = (repo.topics || []).slice(0, 3).map(t => `<span style="background:#f1f8ff;color:#0366d6;padding:2px 8px;border-radius:12px;font-size:11px;">${t}</span>`).join(' ');
+                const collectionsHtml = userCollections.map(c => `<div class="collection-item" onclick="addToCollection(event, '${c.id}', '${repo.id}', '${repo.name}', '${repo.owner.login}')">${c.name}</div>`).join('');
+
+                return `
+                        <div class="repo-card" onclick="toggleRepoDetails(event, this, '${repo.owner.login}', '${repo.name}')">
                             <div class="repo-header">
                                 <div>
                                     <a href="${repo.html_url}" class="repo-title" target="_blank" onclick="event.stopPropagation()">
@@ -881,13 +878,13 @@
                                 </div>
                                 ` : ''}
                             </div>
-                            ${repo.description ? `<p class="repo-description">${repo.description}</p>` : ''}
                             ${topicsHtml ? `<div style="margin-bottom:10px;display:flex;gap:5px;flex-wrap:wrap;">${topicsHtml}</div>` : ''}
                             <div class="repo-meta">
                                 <span>Updated ${new Date(repo.updated_at).toLocaleDateString()}</span>
                                 ${repo.archived ? '<span class="archived">📁 Archived</span>' : ''}
                             </div>
                             <div class="repo-details" onclick="event.stopPropagation()">
+                                <div class="ai-summary-container" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e1e5e9;"></div>
                                 <div class="repo-details-grid">
                                     <div class="repo-detail-item">
                                         <span class="repo-detail-label">Open Issues</span>
@@ -968,7 +965,7 @@
         }
 
         // Close dropdowns when clicking outside
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             document.querySelectorAll('.collection-dropdown.show').forEach(dropdown => {
                 if (!event.target.closest('.btn-actions')) {
                     dropdown.classList.remove('show');
@@ -976,9 +973,55 @@
             });
         });
 
-        function toggleRepoDetails(event, element) {
-            if (event.target.closest('a') || event.target.closest('button')) return;
-            element.classList.toggle('expanded');
+        function toggleRepoDetails(event, element, owner, repo) {
+            if (event.target.closest('a') || event.target.closest('button') || event.target.closest('input') || event.target.closest('.collection-dropdown')) return;
+
+            const isExpanded = element.classList.toggle('expanded');
+
+            if (isExpanded && owner && repo) {
+                const summaryContainer = element.querySelector('.ai-summary-container');
+                if (summaryContainer && !summaryContainer.dataset.loaded) {
+                    summaryContainer.innerHTML = '<div class="loading" style="padding: 10px; font-size: 13px;">🤖 Generating AI Summary...</div>';
+
+                    fetch(`${API_BASE}/api/v1/intelligence/repositories/${owner}/${repo}/summary`)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Failed to load AI summary');
+                            return response.json();
+                        })
+                        .then(summary => {
+                            const useCases = summary.use_cases && summary.use_cases.length > 0
+                                ? summary.use_cases.map(uc => `<li>${uc}</li>`).join('')
+                                : '';
+
+                            summaryContainer.innerHTML = `
+                                <div style="margin-bottom: 15px;">
+                                    <h4 style="font-size: 13px; color: #586069; margin-bottom: 5px; text-transform: uppercase;">What it does</h4>
+                                    <p style="font-size: 14px; line-height: 1.5; color: #24292e; margin: 0;">${summary.what_it_does}</p>
+                                </div>
+                                <div style="margin-bottom: 15px;">
+                                    <h4 style="font-size: 13px; color: #586069; margin-bottom: 5px; text-transform: uppercase;">Who should use it</h4>
+                                    <p style="font-size: 14px; line-height: 1.5; color: #24292e; margin: 0;">${summary.who_should_use_it}</p>
+                                </div>
+                                <div style="margin-bottom: 15px; display: flex; gap: 20px;">
+                                    <div>
+                                        <h4 style="font-size: 13px; color: #586069; margin-bottom: 5px; text-transform: uppercase;">Difficulty Level</h4>
+                                        <span style="background: #e1e4e8; color: #24292e; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500;">${summary.complexity}</span>
+                                    </div>
+                                </div>
+                                ${useCases ? `
+                                <div>
+                                    <h4 style="font-size: 13px; color: #586069; margin-bottom: 5px; text-transform: uppercase;">Use Cases</h4>
+                                    <ul style="font-size: 14px; line-height: 1.5; color: #24292e; padding-left: 20px; margin: 0;">${useCases}</ul>
+                                </div>` : ''}
+                            `;
+                            summaryContainer.dataset.loaded = "true";
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            summaryContainer.innerHTML = '<div class="error" style="padding: 10px; font-size: 13px; margin: 0;">Failed to load AI summary.</div>';
+                        });
+                }
+            }
         }
 
         function toggleCollectionDropdown(event, button) {
@@ -1004,7 +1047,7 @@
                 } else {
                     alert('Failed to add to collection.');
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             }
         }
@@ -1026,7 +1069,7 @@
                     const newCollection = await createRes.json();
                     userCollections.push(newCollection);
                     loadUserData();
-                    
+
                     const addRes = await fetch(`${API_BASE}/api/v1/user/collections/${newCollection.id}/add-repo?repo_id=${repoId}`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${userToken}` }
@@ -1041,7 +1084,7 @@
                 } else {
                     alert('Failed to create collection.');
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             }
         }
@@ -1123,4 +1166,5 @@
         }
     </script>
 </body>
+
 </html>
