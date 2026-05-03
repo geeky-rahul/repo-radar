@@ -1231,6 +1231,115 @@
             }
         }
 
+        .profile-dashboard {
+            margin-bottom: 24px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(25, 33, 60, 0.9), rgba(15, 20, 40, 0.96));
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 16px 40px rgba(2, 6, 23, 0.3);
+            overflow: hidden;
+        }
+
+        .profile-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .profile-info-wrap {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .profile-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #6d4bcf;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .profile-text h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            letter-spacing: -0.02em;
+            color: #fff;
+        }
+
+        .profile-text p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .profile-logout {
+            padding: 10px 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .profile-logout:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-tabs {
+            display: flex;
+            padding: 0 16px;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .profile-tab {
+            padding: 16px 20px;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+
+        .profile-tab:hover {
+            color: #fff;
+        }
+
+        .profile-tab.active {
+            color: #fff;
+            border-bottom-color: #5b8cff;
+        }
+
+        .profile-tab span.icon {
+            font-size: 1.1rem;
+        }
+        
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -1775,8 +1884,16 @@
 
         function renderAuthAvatar() {
             const navActions = document.querySelector('.nav-actions');
+            const appShell = document.querySelector('.app-shell');
+            const appShellHeader = document.querySelector('.app-shell-header');
+            let existingDashboard = document.getElementById('profileDashboard');
+            if (existingDashboard) {
+                existingDashboard.remove();
+            }
+
             if (!navActions) return;
             navActions.innerHTML = '';
+            
             if (!userProfile) {
                 const btn = document.createElement('button');
                 btn.className = 'primary-btn';
@@ -1785,81 +1902,78 @@
                 btn.textContent = 'Sign in with Google';
                 btn.addEventListener('click', openGoogleSignIn);
                 navActions.appendChild(btn);
+                
+                if (appShellHeader) appShellHeader.style.display = 'flex';
+                document.querySelector('.nav').style.display = 'flex';
+                document.querySelector('.hero').style.display = 'grid';
                 return;
             }
 
-            const avatar = document.createElement('div');
-            avatar.id = 'authAvatar';
-            avatar.className = 'avatar';
-            avatar.style.cursor = 'pointer';
-            avatar.title = userProfile.name || userProfile.email || 'Profile';
+            // Hide the hero and original nav elements to focus on the dashboard layout
+            document.querySelector('.nav').style.display = 'none';
+            document.querySelector('.hero').style.display = 'none';
+            if (appShellHeader) appShellHeader.style.display = 'none';
 
+            const dashboard = document.createElement('div');
+            dashboard.id = 'profileDashboard';
+            dashboard.className = 'profile-dashboard';
+
+            let avatarContent = '';
             if (userProfile.avatar_url) {
-                const img = document.createElement('img');
-                img.src = userProfile.avatar_url;
-                img.alt = userProfile.name || '';
-                avatar.appendChild(img);
+                avatarContent = `<img src="${escapeHtml(userProfile.avatar_url)}" alt="${escapeHtml(userProfile.name || '')}">`;
             } else {
-                const initials = (userProfile.name || userProfile.email || 'U').split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase();
-                avatar.textContent = initials;
-                avatar.style.display = 'flex';
-                avatar.style.alignItems = 'center';
-                avatar.style.justifyContent = 'center';
-                avatar.style.width = '40px';
-                avatar.style.height = '40px';
-                avatar.style.borderRadius = '999px';
-                avatar.style.background = '#0f1724';
-                avatar.style.color = '#fff';
+                avatarContent = (userProfile.name || userProfile.email || 'U').split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase();
             }
 
-            // dropdown
-            const menu = document.createElement('div');
-            menu.id = 'authMenu';
-            menu.className = 'auth-menu';
-            menu.style.position = 'absolute';
-            menu.style.right = '12px';
-            menu.style.top = '64px';
-            menu.style.background = '#fff';
-            menu.style.border = '1px solid rgba(2,6,23,.08)';
-            menu.style.boxShadow = '0 10px 30px rgba(2,6,23,.12)';
-            menu.style.padding = '8px';
-            menu.style.borderRadius = '8px';
-            menu.style.display = 'none';
-            menu.style.zIndex = 60;
+            dashboard.innerHTML = `
+                <div class="profile-card">
+                    <div class="profile-info-wrap">
+                        <div class="profile-avatar">${avatarContent}</div>
+                        <div class="profile-text">
+                            <h2>${escapeHtml(userProfile.name || userProfile.email)}</h2>
+                            <p>${escapeHtml(userProfile.email || '')}</p>
+                        </div>
+                    </div>
+                    <button class="profile-logout" id="logoutBtn">Logout</button>
+                </div>
+                <div class="profile-tabs">
+                    <button class="profile-tab active" data-tab="search"><span class="icon">🔍</span> Search</button>
+                    <button class="profile-tab" data-tab="favorites"><span class="icon">❤️</span> Favorites</button>
+                    <button class="profile-tab" data-tab="saved-searches"><span class="icon">📌</span> Saved Searches</button>
+                    <button class="profile-tab" data-tab="collections"><span class="icon">📁</span> Collections</button>
+                    <button class="profile-tab" data-tab="recommendations"><span class="icon">💡</span> Recommendations</button>
+                </div>
+            `;
 
-            const makeItem = (label, cb) => {
-                const item = document.createElement('div');
-                item.className = 'auth-menu-item';
-                item.style.padding = '8px 12px';
-                item.style.cursor = 'pointer';
-                item.textContent = label;
-                item.addEventListener('click', () => {
-                    cb();
-                    menu.style.display = 'none';
-                });
-                return item;
-            };
+            appShell.insertBefore(dashboard, appShell.firstChild);
 
-            menu.appendChild(makeItem('My Profile', () => openProfileModal()));
-            menu.appendChild(makeItem('My Favorites', () => openProfileModal('favorites')));
-            menu.appendChild(makeItem('My Collections', () => openProfileModal('collections')));
-            menu.appendChild(makeItem('Recommendations', () => openProfileModal('recommendations')));
-            menu.appendChild(makeItem('Sign out', () => {
+            document.getElementById('logoutBtn').addEventListener('click', () => {
                 localStorage.removeItem('repoSearchUserToken');
                 userProfile = null;
                 userFavorites = new Set();
                 renderAuthAvatar();
-            }));
-
-            const wrapper = document.createElement('div');
-            wrapper.style.position = 'relative';
-            wrapper.appendChild(avatar);
-            wrapper.appendChild(menu);
-            avatar.addEventListener('click', () => {
-                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+                resetSearchState();
             });
 
-            navActions.appendChild(wrapper);
+            // Wire up the tabs to open the modal (for now, until full views are built)
+            const tabs = dashboard.querySelectorAll('.profile-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    const tabId = tab.dataset.tab;
+                    if (tabId === 'search') {
+                        closeModal();
+                    } else if (tabId === 'favorites') {
+                        openProfileModal('favorites');
+                    } else if (tabId === 'collections') {
+                        openProfileModal('collections');
+                    } else if (tabId === 'recommendations') {
+                        openProfileModal('recommendations');
+                    }
+                });
+            });
         }
 
         async function openProfileModal(section = 'profile') {
