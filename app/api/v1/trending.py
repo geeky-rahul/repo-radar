@@ -31,22 +31,23 @@ async def trending_repositories(top_k: int = Query(10, ge=1, le=30)) -> SearchRe
     redis = await get_redis()
     
     # Try cache first
-    cached_data = await redis.get(CACHE_KEY)
-    if cached_data:
+    if redis:
         try:
-            cached_json = json.loads(cached_data)
-            # Ensure we only return up to top_k
-            results = [RepositoryItem(**r) for r in cached_json["results"]][:top_k]
-            duration_ms = round((time.monotonic() - start_time) * 1000, 2)
-            
-            return SearchResponse(
-                original_query="trending projects",
-                parsed_query=ParsedGitHubQuery(query="trending custom"),
-                total_found=len(results),
-                results=results,
-                cached=True,
-                duration_ms=duration_ms,
-            )
+            cached_data = await redis.get(CACHE_KEY)
+            if cached_data:
+                cached_json = json.loads(cached_data)
+                # Ensure we only return up to top_k
+                results = [RepositoryItem(**r) for r in cached_json["results"]][:top_k]
+                duration_ms = round((time.monotonic() - start_time) * 1000, 2)
+                
+                return SearchResponse(
+                    original_query="trending projects",
+                    parsed_query=ParsedGitHubQuery(query="trending custom"),
+                    total_found=len(results),
+                    results=results,
+                    cached=True,
+                    duration_ms=duration_ms,
+                )
         except Exception as e:
             logger.warning("api.trending.cache_parse_error", error=str(e))
     
@@ -70,10 +71,14 @@ async def trending_repositories(top_k: int = Query(10, ge=1, le=30)) -> SearchRe
     top_results = ranked[:30]  # Store up to 30 in cache
     
     # Cache the results
-    cache_payload = {
-        "results": [r.model_dump(mode="json") for r in top_results]
-    }
-    await redis.setex(CACHE_KEY, CACHE_TTL, json.dumps(cache_payload))
+    if redis:
+        try:
+            cache_payload = {
+                "results": [r.model_dump(mode="json") for r in top_results]
+            }
+            await redis.setex(CACHE_KEY, CACHE_TTL, json.dumps(cache_payload))
+        except Exception as e:
+            logger.warning("api.trending.cache_set_error", error=str(e))
     
     duration_ms = round((time.monotonic() - start_time) * 1000, 2)
     
