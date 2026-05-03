@@ -38,6 +38,29 @@ _RECENCY_SIGNALS: set[str] = {
     "recent", "new", "latest", "updated", "modern", "fresh", "2024", "2025",
 }
 
+_GOAL_SIGNALS: dict[str, str] = {
+    "learn": "learning",
+    "learning": "learning",
+    "tutorial": "learning",
+    "production": "production",
+    "deploy": "production",
+    "contribute": "contribution",
+    "contribution": "contribution",
+    "reference": "reference",
+    "example": "reference",
+}
+
+_CONSTRAINT_SIGNALS: dict[str, str] = {
+    "lightweight": "lightweight",
+    "simple": "lightweight",
+    "no api": "no APIs",
+    "no apis": "no APIs",
+    "no external api": "no APIs",
+    "no paid api": "no paid APIs",
+    "no ml": "no ML",
+    "without ml": "no ML",
+}
+
 
 def fallback_parse_query(user_query: str) -> ParsedGitHubQuery:
     lower = user_query.lower()
@@ -84,6 +107,16 @@ def fallback_parse_query(user_query: str) -> ParsedGitHubQuery:
     archived: bool | None = None
     topic: str | None = None
     license_value: str | None = None
+    experience_level: str | None = None
+    goal: str | None = None
+    constraints: list[str] = []
+    beginner_friendly: bool | None = None
+    good_first_issues: bool | None = None
+    actively_maintained: bool | None = None
+    low_setup_complexity: bool | None = None
+    high_documentation_quality: bool | None = None
+    no_external_paid_apis: bool | None = None
+    trending_now: bool | None = None
 
     fork_match = re.search(r"fork\s*:\s*(true|false)", lower)
     if fork_match:
@@ -109,6 +142,30 @@ def fallback_parse_query(user_query: str) -> ParsedGitHubQuery:
     if license_match:
         license_value = license_match.group(1).upper()
 
+    if any(signal in lower for signal in ["beginner", "newbie", "easy", "simple"]):
+        experience_level = "beginner"
+        beginner_friendly = True
+        low_setup_complexity = True
+    elif any(signal in lower for signal in ["intermediate", "moderate"]):
+        experience_level = "intermediate"
+    elif any(signal in lower for signal in ["advanced", "expert", "complex"]):
+        experience_level = "advanced"
+
+    for signal, normalized in _GOAL_SIGNALS.items():
+        if signal in lower:
+            goal = normalized
+            break
+
+    constraints = [normalized for signal, normalized in _CONSTRAINT_SIGNALS.items() if signal in lower]
+    if "good first issue" in lower or "good first issues" in lower:
+        good_first_issues = True
+    if "maintained" in lower or "actively maintained" in lower or "active" in lower:
+        actively_maintained = True
+    if "docs" in lower or "documentation" in lower:
+        high_documentation_quality = True
+    if "trending" in lower or "hot" in lower:
+        trending_now = True
+
     # Build clean keyword query
     stop: set[str] = _FILLER_WORDS | set(_LANGUAGES) | set(_STAR_SIGNALS.keys()) | _RECENCY_SIGNALS
     keywords = [t for t in tokens if t not in stop and len(t) > 1]
@@ -123,4 +180,14 @@ def fallback_parse_query(user_query: str) -> ParsedGitHubQuery:
         archived=archived,
         topic=topic,
         license=license_value,
+        experience_level=experience_level,
+        goal=goal,
+        constraints=constraints,
+        beginner_friendly=beginner_friendly,
+        good_first_issues=good_first_issues,
+        actively_maintained=actively_maintained,
+        low_setup_complexity=low_setup_complexity,
+        high_documentation_quality=high_documentation_quality,
+        no_external_paid_apis=no_external_paid_apis,
+        trending_now=trending_now,
     )

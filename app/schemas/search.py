@@ -4,6 +4,12 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
+from app.schemas.intelligence import (
+    PersonalizationIntent,
+    QueryRefinementSuggestion,
+    RepositoryIntelligence,
+)
+
 
 # ─── Request ──────────────────────────────────────────────────────────────────
 
@@ -17,6 +23,16 @@ class SearchRequest(BaseModel):
     topic: Optional[str] = Field(None, description="Filter by repository topic")
     license: Optional[str] = Field(None, description="Filter by repository license identifier")
     top_k: int = Field(10, ge=1, le=30, description="Number of results to return")
+    experience_level: Optional[str] = Field(None, description="beginner, intermediate, or advanced")
+    goal: Optional[str] = Field(None, description="learning, production, contribution, or reference")
+    constraints: list[str] = Field(default_factory=list, description="Extra intent constraints")
+    beginner_friendly: Optional[bool] = Field(None, description="Prefer simpler repositories")
+    good_first_issues: Optional[bool] = Field(None, description="Prefer repos with beginner-friendly issues")
+    actively_maintained: Optional[bool] = Field(None, description="Prefer actively maintained repos")
+    low_setup_complexity: Optional[bool] = Field(None, description="Prefer repos that are easier to set up")
+    high_documentation_quality: Optional[bool] = Field(None, description="Prefer repositories with strong docs")
+    no_external_paid_apis: Optional[bool] = Field(None, description="Prefer projects that do not require paid APIs")
+    trending_now: Optional[bool] = Field(None, description="Prefer currently trending repositories")
 
 
 # ─── Parsed query (LLM output) ────────────────────────────────────────────────
@@ -35,6 +51,16 @@ class ParsedGitHubQuery(BaseModel):
     archived: Optional[bool] = Field(None, description="Include archived repos when true, exclude when false")
     topic: Optional[str] = Field(None, description="Filter by repository topic")
     license: Optional[str] = Field(None, description="Filter by repository license identifier")
+    experience_level: Optional[str] = Field(None, description="beginner, intermediate, or advanced")
+    goal: Optional[str] = Field(None, description="learning, production, contribution, or reference")
+    constraints: list[str] = Field(default_factory=list, description="Extra intent constraints")
+    beginner_friendly: Optional[bool] = Field(None, description="Prefer simpler repositories")
+    good_first_issues: Optional[bool] = Field(None, description="Prefer repos with beginner-friendly issues")
+    actively_maintained: Optional[bool] = Field(None, description="Prefer actively maintained repos")
+    low_setup_complexity: Optional[bool] = Field(None, description="Prefer repos that are easier to set up")
+    high_documentation_quality: Optional[bool] = Field(None, description="Prefer repositories with strong docs")
+    no_external_paid_apis: Optional[bool] = Field(None, description="Prefer projects that do not require paid APIs")
+    trending_now: Optional[bool] = Field(None, description="Prefer currently trending repositories")
 
     @field_validator("pushed_after")
     @classmethod
@@ -72,6 +98,7 @@ class RepositoryItem(BaseModel):
         description="Previous recorded star count used for 24h trend scoring",
     )
     score: float = 0.0  # computed ranking score
+    intelligence: RepositoryIntelligence | None = None
 
 
 # ─── Response ─────────────────────────────────────────────────────────────────
@@ -83,6 +110,8 @@ class SearchResponse(BaseModel):
     results: list[RepositoryItem]
     cached: bool = False
     duration_ms: float = 0.0
+    query_refinements: list[QueryRefinementSuggestion] = Field(default_factory=list)
+    intent: PersonalizationIntent | None = None
 
 
 class ErrorDetail(BaseModel):

@@ -19,6 +19,8 @@ from app.schemas.search import (
     SearchResponse,
 )
 from app.services.cache import cache_get, cache_set, get_repo_star_history, update_repo_star_history
+from app.services.personalization_service import build_intent, evaluate_fit
+from app.services.scoring_service import build_lightweight_signals, build_repository_intelligence, suggest_query_refinements
 from app.services.ranking import rank_repositories
 from app.tools.github_search import search_github_repositories
 
@@ -44,6 +46,24 @@ def _apply_overrides(parsed: ParsedGitHubQuery, request: SearchRequest) -> Parse
         overrides["topic"] = request.topic
     if request.license is not None:
         overrides["license"] = request.license
+    if request.experience_level is not None:
+        overrides["experience_level"] = request.experience_level
+    if request.goal is not None:
+        overrides["goal"] = request.goal
+    if request.constraints:
+        overrides["constraints"] = request.constraints
+    for key in (
+        "beginner_friendly",
+        "good_first_issues",
+        "actively_maintained",
+        "low_setup_complexity",
+        "high_documentation_quality",
+        "no_external_paid_apis",
+        "trending_now",
+    ):
+        value = getattr(request, key, None)
+        if value is not None:
+            overrides[key] = value
     if overrides:
         return parsed.model_copy(update=overrides)
     return parsed
@@ -68,6 +88,7 @@ async def execute_search(request: SearchRequest) -> SearchResponse:
     # 3. Apply user overrides
     parsed = _apply_overrides(parsed, request)
     logger.info("search.parsed_query", parsed=parsed.model_dump())
+    intent = build_intent(request)
 
     # 4. Fetch from GitHub
     repos = await search_github_repositories(parsed, top_k=request.top_k)
@@ -81,9 +102,19 @@ async def execute_search(request: SearchRequest) -> SearchResponse:
     # 5. Rank
     ranked = rank_repositories(repos)
 
-    # 5.1 Persist star history for future trend calculations
+    # 5.1 Attach intelligence metadata for the returned slice
+    for repo in ranked[: request.top_k]:
+        signals = build_lightweight_signals(repo)
+        fit = evaluate_fit(repo, intent, signals)
+        intelligence = build_repository_intelligence(repo, signals=signals, intent=intent)
+        intelligence.fit = fit
+        repo.intelligence = intelligence
+
+    # 5.2 Persist star history for future trend calculations
     for repo in repos:
         await update_repo_star_history(repo.id, repo.stargazers_count)
+
+    query_refinements = suggest_query_refinements(parsed, ranked[: request.top_k])
 
     # 6. Build response
     duration_ms = round((time.monotonic() - t0) * 1000, 2)
@@ -94,6 +125,8 @@ async def execute_search(request: SearchRequest) -> SearchResponse:
         results=ranked[: request.top_k],
         cached=False,
         duration_ms=duration_ms,
+        query_refinements=query_refinements,
+        intent=intent,
     )
 
     # 7. Store in cache (fire-and-forget style)

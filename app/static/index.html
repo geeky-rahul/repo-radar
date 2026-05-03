@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#050816">
     <title>RepoSearch | GitHub Repository Search</title>
     <style>
         :root {
@@ -70,6 +69,7 @@
                 linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
             background-size: 64px 64px;
+            -webkit-mask-image: radial-gradient(circle at center, black 36%, transparent 100%);
             mask-image: radial-gradient(circle at center, black 36%, transparent 100%);
         }
 
@@ -108,6 +108,7 @@
             background: rgba(8, 12, 24, 0.72);
             border: 1px solid rgba(148, 163, 184, 0.14);
             border-radius: 999px;
+            -webkit-backdrop-filter: blur(18px);
             backdrop-filter: blur(18px);
             box-shadow: 0 16px 60px rgba(2, 6, 23, 0.34);
         }
@@ -266,7 +267,7 @@
             font-size: clamp(3.4rem, 7vw, 6.2rem);
             line-height: 0.94;
             letter-spacing: -0.07em;
-            text-wrap: balance;
+            overflow-wrap: anywhere;
         }
 
         .hero-copy p {
@@ -818,6 +819,106 @@
         .results-grid {
             display: grid;
             gap: 14px;
+        }
+
+        .insight-panel {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 20px;
+            border-radius: 24px;
+            border: 1px solid rgba(91, 140, 255, 0.16);
+            background: linear-gradient(135deg, rgba(10, 16, 30, 0.94), rgba(14, 22, 40, 0.98));
+            box-shadow: 0 18px 42px rgba(2, 6, 23, 0.22);
+        }
+
+        .insight-panel-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .insight-panel h4 {
+            margin: 0;
+            font-size: 1rem;
+            letter-spacing: -0.03em;
+        }
+
+        .insight-panel p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+        }
+
+        .insight-card {
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .insight-card span {
+            display: block;
+            color: var(--muted-2);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .insight-card strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 1.02rem;
+            letter-spacing: -0.03em;
+        }
+
+        .insight-list {
+            display: grid;
+            gap: 10px;
+            margin: 0;
+            padding: 0 0 0 18px;
+            color: #dbe7ff;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2,6,23,0.6);
+            z-index: 120;
+            padding: 20px;
+        }
+
+        .modal.open { display: grid; }
+
+        .modal-content {
+            width: min(920px, 100%);
+            max-height: 80vh;
+            overflow: auto;
+            padding: 20px;
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(10,15,25,0.98), rgba(6,10,18,0.99));
+            border: 1px solid rgba(148,163,184,0.12);
+        }
+
+        .modal-close {
+            float: right;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 800;
         }
 
         .repo-card {
@@ -1446,12 +1547,17 @@
                                 <span class="status-chip">Loading skeleton ready</span>
                                 <span class="status-chip">Responsive results grid</span>
                             </div>
+                            <div>
+                                <button id="compareBtn" class="secondary-btn" type="button">Compare selected</button>
+                            </div>
                         </div>
 
                         <div class="empty-panel" id="emptyState">
                             <h3>Ready for your first search</h3>
                             <p>Try a query like “best beginner Python chatbot project” and refine it with language, stars, or push date filters. Results will render here as polished repository cards.</p>
                         </div>
+
+                        <div class="insight-panel is-hidden" id="insightPanel"></div>
 
                         <div class="skeleton-grid is-hidden" id="skeletonState" aria-hidden="true">
                             <div class="skeleton">
@@ -1521,6 +1627,8 @@
         const footerSignInLink = document.getElementById('footerSignInLink');
         const emptyState = document.getElementById('emptyState');
         const skeletonState = document.getElementById('skeletonState');
+        const insightPanel = document.getElementById('insightPanel');
+        let intelligenceRequestId = 0;
 
         function escapeHtml(value) {
             return String(value)
@@ -1535,6 +1643,78 @@
             if (!value) return 'Unknown';
             const date = new Date(value);
             return Number.isNaN(date.getTime()) ? 'Unknown' : date.toLocaleDateString();
+        }
+
+        async function renderIntelligencePanel(repo) {
+            let intelligence = repo?.intelligence;
+            if (!intelligence) {
+                insightPanel.innerHTML = '';
+                insightPanel.classList.add('is-hidden');
+                return;
+            }
+
+            if (!intelligence.summary && repo?.full_name) {
+                const requestId = ++intelligenceRequestId;
+                const [owner, name] = repo.full_name.split('/');
+                try {
+                    const response = await fetch(`/api/v1/intelligence/repositories/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/analysis`);
+                    if (requestId !== intelligenceRequestId || !response.ok) {
+                        return;
+                    }
+                    const payload = await response.json();
+                    intelligence = payload.intelligence || intelligence;
+                } catch (_err) {
+                    // Keep the lightweight search response if the deep analysis request fails.
+                }
+            }
+
+            const summary = intelligence.summary || {};
+            const quality = intelligence.quality || {};
+            const fit = intelligence.fit || {};
+            const starterItems = Array.isArray(summary.first_things_to_try) ? summary.first_things_to_try.slice(0, 3) : [];
+
+            insightPanel.innerHTML = `
+                <div class="insight-panel-head">
+                    <div>
+                        <h4>Repository intelligence for ${escapeHtml(repo.full_name || 'top result')}</h4>
+                        <p>${escapeHtml(quality.insight || 'A structured summary of why this repository is a strong or weak fit.')}</p>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-chip">${escapeHtml(quality.label || 'Unknown')}</span>
+                        <span class="status-chip">Fit ${Number(fit.score || 0).toFixed(0)}%</span>
+                        <span class="status-chip">${escapeHtml(intelligence.trend_label || 'Neutral')}</span>
+                    </div>
+                </div>
+
+                <div class="insight-grid">
+                    <div class="insight-card">
+                        <span>Complexity</span>
+                        <strong>${escapeHtml(summary.complexity || 'Intermediate')}</strong>
+                    </div>
+                    <div class="insight-card">
+                        <span>Architecture</span>
+                        <strong>${escapeHtml(summary.architecture_pattern || 'modular')}</strong>
+                    </div>
+                    <div class="insight-card">
+                        <span>Quality score</span>
+                        <strong>${Number(quality.score || 0).toFixed(0)} / 100</strong>
+                    </div>
+                    <div class="insight-card">
+                        <span>Fit score</span>
+                        <strong>${Number(fit.score || 0).toFixed(0)} / 100</strong>
+                    </div>
+                </div>
+
+                ${starterItems.length ? `
+                    <div>
+                        <h4>Best first steps</h4>
+                        <ul class="insight-list">
+                            ${starterItems.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+            `;
+            insightPanel.classList.remove('is-hidden');
         }
 
         async function openGoogleSignIn() {
@@ -1612,9 +1792,13 @@
 
             resultStats.textContent = `${data.total_found} repositories found · ${Math.round(data.duration_ms || 0)}ms · ${data.cached ? 'cached' : 'fresh'}${parsedParts.length ? '\n' + parsedParts.join(' · ') : ''}`;
 
+            void renderIntelligencePanel(Array.isArray(data.results) ? data.results[0] : null);
+
             if (!Array.isArray(data.results) || data.results.length === 0) {
                 resultsList.innerHTML = '';
                 resultsList.classList.add('is-hidden');
+                insightPanel.innerHTML = '';
+                insightPanel.classList.add('is-hidden');
                 emptyState.innerHTML = `
                     <h3>No repositories matched this search</h3>
                     <p>Try broadening the query or removing one of the filters. The app is ready to surface ranked results as soon as GitHub returns matches.</p>
@@ -1625,6 +1809,9 @@
 
             resultsList.innerHTML = data.results.map((repo) => `
                 <article class="repo-card">
+                    <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;">
+                        <input type="checkbox" class="compare-checkbox" data-fullname="${escapeHtml(repo.full_name)}" title="Select to compare">
+                    </div>
                     <div class="repo-card-head">
                         <div>
                             <div class="repo-title">
@@ -1647,12 +1834,23 @@
                             ${repo.topics.slice(0, 8).map((topic) => `<span class="repo-tag">${escapeHtml(topic)}</span>`).join('')}
                         </div>
                     ` : ''}
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button class="secondary-btn" type="button" onclick="openSummary('${escapeHtml(repo.full_name)}')">View summary</button>
+                        <button class="secondary-btn" type="button" onclick="openStarter('${escapeHtml(repo.full_name)}')">Get starter guide</button>
+                    </div>
                 </article>
             `).join('');
 
             resultsList.classList.remove('is-hidden');
             emptyState.classList.add('is-hidden');
             emptyState.style.display = 'none';
+
+            // wire compare checkbox behavior
+            document.querySelectorAll('.compare-checkbox').forEach(cb => cb.addEventListener('change', () => {
+                // enable compare button if at least 2 selected
+                const selected = document.querySelectorAll('.compare-checkbox:checked').length;
+                document.getElementById('compareBtn').disabled = selected < 2;
+            }));
         }
 
         async function searchRepositories() {
@@ -1705,6 +1903,8 @@
             resultStats.textContent = 'Search for a repository to see ranked results, parsed filters, and response timing.';
             resultsList.innerHTML = '';
             resultsList.classList.add('is-hidden');
+            insightPanel.innerHTML = '';
+            insightPanel.classList.add('is-hidden');
             emptyState.classList.remove('is-hidden');
             emptyState.style.display = 'grid';
             emptyState.innerHTML = `
@@ -1721,6 +1921,10 @@
                 openGoogleSignIn();
             });
 
+            document.getElementById('compareBtn').addEventListener('click', async () => {
+                await compareSelected();
+            });
+
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 await searchRepositories();
@@ -1735,6 +1939,93 @@
         }
 
         document.addEventListener('DOMContentLoaded', bootstrap);
+
+        // Modal helpers
+        function showModal(html) {
+            let modal = document.getElementById('compareModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'compareModal';
+                modal.className = 'modal';
+                modal.innerHTML = `<div class="modal-content"><button class="modal-close" onclick="closeModal()">✕</button><div id="modalBody"></div></div>`;
+                document.body.appendChild(modal);
+            }
+            document.getElementById('modalBody').innerHTML = html;
+            modal.classList.add('open');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('compareModal');
+            if (modal) modal.classList.remove('open');
+        }
+
+        // Open summary (deep summary endpoint)
+        async function openSummary(fullName) {
+            const [owner, name] = fullName.split('/');
+            try {
+                showModal('<p>Loading summary…</p>');
+                const res = await fetch(`/api/v1/intelligence/repositories/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/summary`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const summary = await res.json();
+                const html = `
+                    <h3>${escapeHtml(fullName)} — summary</h3>
+                    <p><strong>What it does</strong>: ${escapeHtml(summary.what_it_does || '')}</p>
+                    <p><strong>How it works</strong>: ${escapeHtml(summary.how_it_works || '')}</p>
+                    <p><strong>Complexity</strong>: ${escapeHtml(summary.complexity || '')}</p>
+                    <h4>Key files</h4>
+                    <ul>${(summary.key_files || []).map(f=>`<li>${escapeHtml(f)}</li>`).join('')}</ul>
+                `;
+                showModal(html);
+            } catch (err) {
+                showModal(`<p>Failed to load summary: ${escapeHtml(err.message || String(err))}</p>`);
+            }
+        }
+
+        // Open starter guide
+        async function openStarter(fullName) {
+            const [owner, name] = fullName.split('/');
+            try {
+                showModal('<p>Loading starter guide…</p>');
+                const res = await fetch(`/api/v1/intelligence/repositories/${encodeURIComponent(owner)}/${encodeURIComponent(name)}/starter`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const guide = await res.json();
+                const html = `
+                    <h3>${escapeHtml(fullName)} — starter guide</h3>
+                    <h4>Install</h4>
+                    <ul>${(guide.install_dependencies || []).map(i=>`<li><code>${escapeHtml(i)}</code></li>`).join('')}</ul>
+                    <h4>Run commands</h4>
+                    <ul>${(guide.run_commands || []).map(i=>`<li><code>${escapeHtml(i)}</code></li>`).join('')}</ul>
+                    <h4>First things to try</h4>
+                    <ul>${(guide.first_things_to_try || []).map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul>
+                `;
+                showModal(html);
+            } catch (err) {
+                showModal(`<p>Failed to load starter guide: ${escapeHtml(err.message || String(err))}</p>`);
+            }
+        }
+
+        // Compare selected repositories
+        async function compareSelected() {
+            const checked = Array.from(document.querySelectorAll('.compare-checkbox:checked')).map(cb => cb.dataset.fullname).slice(0,5);
+            if (checked.length < 2) {
+                alert('Select at least two repositories to compare.');
+                return;
+            }
+            try {
+                showModal('<p>Running comparison…</p>');
+                const payload = { repositories: checked, intent: { experience_level: 'beginner', goal: 'learning', constraints: [], beginner_friendly: true, low_setup_complexity: true } };
+                const res = await fetch('/api/v1/intelligence/compare', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const body = await res.json();
+                const rows = (body.repositories || []).map(r => `
+                    <li><strong>${escapeHtml(r.full_name)}</strong> — ${escapeHtml(r.insight || '')}<br/>Quality: ${escapeHtml(String(r.quality_score))}, Fit: ${escapeHtml(String(r.fit_score))}, Docs: ${escapeHtml(String(r.documentation_quality))}</li>
+                `).join('');
+                const html = `<h3>Comparison</h3><ul>${rows}</ul><p><strong>Conclusion:</strong> ${escapeHtml(body.conclusion || '')}</p>`;
+                showModal(html);
+            } catch (err) {
+                showModal(`<p>Compare failed: ${escapeHtml(err.message || String(err))}</p>`);
+            }
+        }
     </script>
 </body>
 </html>

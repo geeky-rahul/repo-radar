@@ -24,7 +24,7 @@ You are a GitHub repository search query optimizer.
 Given a natural language description of what a developer is looking for,
 extract structured fields to build an optimal GitHub search query.
 
-Rules:
+ Rules:
 - `query`: short keyword phrase, no GitHub qualifiers, no filler words
 - `language`: programming language if clearly mentioned or implied, else null
 - `min_stars`: infer from intent: "popular"→1000, "beginner"→100, "best"→500, otherwise 0
@@ -33,6 +33,16 @@ Rules:
 - `archived`: true when archived repos should be included, false when they should be excluded, else null
 - `topic`: set to a single topic slug when the query explicitly requests a repository topic, else null
 - `license`: set to a license identifier when the query explicitly requests a license, else null
+- `experience_level`: beginner, intermediate, or advanced when the query explicitly asks for it
+- `goal`: learning, production, contribution, or reference when implied
+- `constraints`: include notable constraints like lightweight, no APIs, no ML, or no paid APIs
+- `beginner_friendly`: true when the query asks for easier or simpler repositories
+- `good_first_issues`: true when the query mentions beginner contribution opportunities
+- `actively_maintained`: true when the query asks for active, maintained, or healthy projects
+- `low_setup_complexity`: true when the query asks for easy setup or quick start
+- `high_documentation_quality`: true when the query mentions docs or onboarding quality
+- `no_external_paid_apis`: true when the query excludes external or paid APIs
+- `trending_now`: true when the query asks for trending or hot repositories
 
 {format_instructions}
 """
