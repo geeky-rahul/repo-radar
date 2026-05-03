@@ -4,6 +4,7 @@ Failures are non-fatal — the app degrades gracefully without caching.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import hashlib
 import json
 
@@ -78,3 +79,66 @@ async def cache_set(namespace: str, payload: dict, value: dict) -> None:
         logger.debug("cache.set", key=key, ttl=settings.cache_ttl_seconds)
     except Exception as exc:
         logger.warning("cache.set_error", key=key, error=str(exc))
+
+
+def _repo_star_history_key(repo_id: int) -> str:
+    return f"ghsearch:repo_star_history:{repo_id}"
+
+
+async def get_repo_star_history(repo_id: int) -> dict[str, int] | None:
+    client = await get_redis()
+    if client is None:
+        return None
+    key = _repo_star_history_key(repo_id)
+    try:
+        raw = await client.get(key)
+        if not raw:
+            return None
+        return json.loads(raw)
+    except Exception as exc:
+        logger.warning("cache.repo_history_get_error", key=key, error=str(exc))
+        return None
+
+
+async def update_repo_star_history(repo_id: int, stars: int) -> None:
+    client = await get_redis()
+    if client is None:
+        return
+    key = _repo_star_history_key(repo_id)
+    now = datetime.now(tz=timezone.utc)
+    now_iso = now.isoformat()
+
+    current_data = await get_repo_star_history(repo_id)
+    if current_data is None:
+        payload = {
+            "current": stars,
+            "current_at": now_iso,
+            "previous": stars,
+            "previous_at": now_iso,
+        }
+    else:
+        previous_at = current_data.get("current_at")
+        try:
+            previous_time = datetime.fromisoformat(previous_at)
+        except Exception:
+            previous_time = now
+
+        if (now - previous_time).days >= 1:
+            payload = {
+                "current": stars,
+                "current_at": now_iso,
+                "previous": current_data.get("current", stars),
+                "previous_at": previous_at,
+            }
+        else:
+            payload = {
+                "current": stars,
+                "current_at": now_iso,
+                "previous": current_data.get("previous", stars),
+                "previous_at": current_data.get("previous_at", now_iso),
+            }
+
+    try:
+        await client.set(key, json.dumps(payload))
+    except Exception as exc:
+        logger.warning("cache.repo_history_set_error", key=key, error=str(exc))

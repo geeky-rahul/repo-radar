@@ -18,7 +18,7 @@ from app.schemas.search import (
     SearchRequest,
     SearchResponse,
 )
-from app.services.cache import cache_get, cache_set
+from app.services.cache import cache_get, cache_set, get_repo_star_history, update_repo_star_history
 from app.services.ranking import rank_repositories
 from app.tools.github_search import search_github_repositories
 
@@ -72,8 +72,18 @@ async def execute_search(request: SearchRequest) -> SearchResponse:
     # 4. Fetch from GitHub
     repos = await search_github_repositories(parsed, top_k=request.top_k)
 
+    # 4.1 Attach stored star history for better trend scoring
+    for repo in repos:
+        history = await get_repo_star_history(repo.id)
+        if history and isinstance(history.get("previous"), int):
+            repo.stars_yesterday = history["previous"]
+
     # 5. Rank
     ranked = rank_repositories(repos)
+
+    # 5.1 Persist star history for future trend calculations
+    for repo in repos:
+        await update_repo_star_history(repo.id, repo.stargazers_count)
 
     # 6. Build response
     duration_ms = round((time.monotonic() - t0) * 1000, 2)

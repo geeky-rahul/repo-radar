@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, status
+import time
+
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.core.exceptions import (
     GitHubAPIError,
@@ -9,8 +11,10 @@ from app.core.exceptions import (
     QueryParsingError,
 )
 from app.core.logging import get_logger
-from app.schemas.search import ErrorDetail, ErrorResponse, SearchRequest, SearchResponse
+from app.schemas.search import ErrorDetail, ErrorResponse, ParsedGitHubQuery, SearchRequest, SearchResponse
+from app.services.ranking import rank_repositories
 from app.services.search import execute_search
+from app.tools.github_search import search_github_repositories
 
 router = APIRouter(prefix="/search", tags=["search"])
 logger = get_logger(__name__)
@@ -90,3 +94,28 @@ async def search_repositories(request: SearchRequest) -> SearchResponse:
                 message="An unexpected error occurred",
             ).model_dump(),
         )
+
+
+@router.get(
+    "/rising",
+    response_model=SearchResponse,
+    summary="Get rising projects trending by recent star growth",
+    description=(
+        "Fetches a broad set of GitHub repositories and ranks them using recent star "
+        "growth, fork momentum, and contributor activity."
+    ),
+)
+async def rising_repositories(top_k: int = Query(10, ge=1, le=30, description="Number of rising repositories to return")) -> SearchResponse:
+    start = time.monotonic()
+    parsed = ParsedGitHubQuery(query="stars:>10")
+    repos = await search_github_repositories(parsed, top_k=top_k)
+    ranked = rank_repositories(repos)
+    duration_ms = round((time.monotonic() - start) * 1000, 2)
+    return SearchResponse(
+        original_query="rising projects",
+        parsed_query=parsed,
+        total_found=len(ranked),
+        results=ranked[: top_k],
+        cached=False,
+        duration_ms=duration_ms,
+    )

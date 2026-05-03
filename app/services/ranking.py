@@ -87,7 +87,12 @@ def _community_health_score(repo: RepositoryItem) -> float:
 
 
 def _trend_score(repo: RepositoryItem) -> float:
-    """Estimate momentum using stars per day over repository lifetime."""
+    """Estimate momentum using recent star growth or repository velocity."""
+    if repo.stars_yesterday is not None:
+        delta = repo.stargazers_count - repo.stars_yesterday
+        if delta > 0:
+            return min(1.0, delta / 200.0)
+
     if not repo.created_at or repo.stargazers_count <= 0:
         return 0.0
 

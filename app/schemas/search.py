@@ -67,6 +67,10 @@ class RepositoryItem(BaseModel):
     archived: bool = False
     owner_login: str
     owner_avatar_url: Optional[str] = None
+    stars_yesterday: Optional[int] = Field(
+        None,
+        description="Previous recorded star count used for 24h trend scoring",
+    )
     score: float = 0.0  # computed ranking score
 
 
