@@ -18,22 +18,60 @@ _CACHE_NAMESPACE = "repository_analysis_v1"
 
 _SUMMARY_PROMPT = """\
 You are a senior repository analyst.
-Summarize the repository using the bundle of GitHub metadata, file tree, README text, and dependency hints.
-Return structured output only.
+Summarize the repository using the provided README text and metadata.
+Return structured JSON output only.
+
+Repository: {repo_name}
+Languages: {languages}
 
 Rules:
 - What it does should be concise and accurate.
+- Who should use it should identify the target audience.
+- Use cases should list 2-3 specific scenarios where this repo shines.
 - How it works should describe the architecture at a high level.
 - Key files should be the most useful starting files.
 - Complexity should be one of Beginner, Intermediate, or Advanced.
 - First things to try should be practical onboarding actions.
 - Common issues should focus on setup and dependency problems.
 
+README Text:
+{readme_text}
+
 {format_instructions}
 """
 
+async def _invoke_llm_summary(bundle: dict[str, Any], signals: RepositoryDeepSignals) -> RepositorySummary:
+    repo = bundle.get("repository", {})
+    full_name = repo.get("full_name", "this repository")
+    readme_text = bundle.get("readme", "")
+    # Truncate README to avoid context window limits if necessary (Gemini Flash has 1M context, but let's be safe and fast)
+    readme_text = readme_text[:15000] if readme_text else "No README provided."
+    languages = ", ".join(bundle.get("primary_languages", [])) or "Unknown"
 
-def _derive_summary_from_bundle(bundle: dict[str, Any], signals: RepositoryDeepSignals) -> RepositorySummary:
+    parser = PydanticOutputParser(pydantic_object=RepositorySummary)
+    prompt = ChatPromptTemplate.from_template(_SUMMARY_PROMPT)
+    
+    # We use gemini-1.5-flash for fast responses
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.2, max_tokens=1024)
+    
+    chain = prompt | llm | parser
+    
+    return await chain.ainvoke({
+        "repo_name": full_name,
+        "languages": languages,
+        "readme_text": readme_text,
+        "format_instructions": parser.get_format_instructions()
+    })
+
+
+
+async def _derive_summary_from_bundle(bundle: dict[str, Any], signals: RepositoryDeepSignals) -> RepositorySummary:
+    try:
+        if get_settings().GOOGLE_API_KEY or get_settings().GEMINI_API_KEY:
+            return await _invoke_llm_summary(bundle, signals)
+    except Exception as e:
+        logger.warning(f"LLM summarization failed, falling back to heuristics: {e}")
+
     repo = bundle.get("repository", {})
     full_name = repo.get("full_name", "this repository")
     architecture = signals.architecture_pattern
@@ -78,6 +116,8 @@ def _derive_summary_from_bundle(bundle: dict[str, Any], signals: RepositoryDeepS
 
     return RepositorySummary(
         what_it_does=what_it_does,
+        who_should_use_it="Developers looking to understand the core codebase.",
+        use_cases=["Learning", "Quick reference"],
         how_it_works=how_it_works,
         key_files=signals.key_files[:5],
         complexity=signals.summary or complexity,
@@ -125,7 +165,7 @@ async def analyze_repository(full_name: str) -> tuple[dict[str, Any], Repository
 
     bundle = await fetch_repository_bundle(full_name)
     signals = _derive_signals_from_bundle(bundle)
-    summary = _derive_summary_from_bundle(bundle, signals)
+    summary = await _derive_summary_from_bundle(bundle, signals)
     await cache_set(
         _CACHE_NAMESPACE,
         {"full_name": full_name},

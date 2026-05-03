@@ -53,6 +53,8 @@ class RepositoryFitAssessment(BaseModel):
 
 class RepositorySummary(BaseModel):
     what_it_does: str
+    who_should_use_it: str
+    use_cases: list[str] = Field(default_factory=list)
     how_it_works: str
     key_files: list[str] = Field(default_factory=list)
     complexity: str = Field(
