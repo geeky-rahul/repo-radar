@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     google_oauth_client_id: str = ""
     google_oauth_client_secret: str = ""
 
+    # GitHub OAuth
+    github_oauth_client_id: str = ""
+    github_oauth_client_secret: str = ""
+
     # Ranking weights
     ranking_stars_weight: float = 0.45
     ranking_recency_weight: float = 0.18

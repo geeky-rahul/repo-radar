@@ -49,14 +49,12 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/auth/config", summary="Get OAuth configuration")
 async def get_oauth_config():
-    """Returns the Google OAuth client ID for frontend OAuth flow."""
+    """Returns the Google and GitHub OAuth client IDs for frontend OAuth flow."""
     settings = get_settings()
-    if not settings.google_oauth_client_id:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Google OAuth client ID is not configured.",
-        )
-    return {"client_id": settings.google_oauth_client_id}
+    return {
+        "client_id": settings.google_oauth_client_id or "",
+        "github_client_id": settings.github_oauth_client_id or ""
+    }
 
 def _to_public_profile(user: UserProfile) -> UserProfileResponse:
     return UserProfileResponse(
@@ -182,9 +180,97 @@ async def google_callback(code: str = Query(...), state: str = Query(None)) -> R
         await create_or_update_user_profile(profile)
         access_token = await create_session_for_user(user_id)
 
-        # Redirect back to homepage with access token in URL
         return RedirectResponse(
             url=f"/?token={access_token}&name={profile.name}",
+            status_code=status.HTTP_302_FOUND,
+        )
+    except Exception as exc:
+        logger.exception("OAuth callback: Error during user creation/session")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"User creation failed: {str(exc)}",
+        ) from exc
+
+@router.get("/auth/github/callback", summary="GitHub OAuth callback")
+async def github_callback(code: str = Query(...), state: str = Query(None)) -> RedirectResponse:
+    """
+    Callback endpoint for GitHub OAuth 2.0 authorization code flow.
+    """
+    settings = get_settings()
+    if not settings.github_oauth_client_id or not settings.github_oauth_client_secret:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="GitHub OAuth credentials are not configured.",
+        )
+
+    try:
+        # Exchange authorization code for access token
+        async with httpx.AsyncClient() as client:
+            token_response = await client.post(
+                "https://github.com/login/oauth/access_token",
+                headers={"Accept": "application/json"},
+                data={
+                    "client_id": settings.github_oauth_client_id,
+                    "client_secret": settings.github_oauth_client_secret,
+                    "code": code,
+                },
+            )
+
+            if not token_response.is_success:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to exchange authorization code for tokens.",
+                )
+
+            token_data = token_response.json()
+
+        access_token_github = token_data.get("access_token")
+        if not access_token_github:
+            raise ValueError(f"No access token in response: {token_data}")
+
+        # Get User Info
+        github_user = await get_github_user_info(access_token_github)
+        
+        # Get Emails
+        email = github_user.get("email")
+        if not email:
+            async with httpx.AsyncClient() as client:
+                email_res = await client.get(
+                    "https://api.github.com/user/emails",
+                    headers={"Authorization": f"Bearer {access_token_github}", "Accept": "application/vnd.github+json"}
+                )
+                if email_res.is_success:
+                    emails = email_res.json()
+                    primary_email = next((e["email"] for e in emails if e.get("primary")), None)
+                    email = primary_email or (emails[0]["email"] if emails else None)
+        
+        if not email:
+            email = f"{github_user.get('login')}@users.noreply.github.com"
+            
+    except Exception as exc:
+        logger.exception("OAuth callback: Unexpected error during GitHub OAuth flow")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"OAuth callback failed: {str(exc)}",
+        ) from exc
+
+    try:
+        user_id = f"github:{github_user['id']}"
+        profile = UserProfile(
+            user_id=user_id,
+            email=email,
+            name=github_user.get("name") or github_user.get("login"),
+            avatar_url=github_user.get("avatar_url"),
+            github_username=github_user.get("login"),
+            github_token=access_token_github,
+        )
+
+        await create_or_update_user_profile(profile)
+        session_token = await create_session_for_user(user_id)
+
+        # Redirect back to homepage with access token in URL
+        return RedirectResponse(
+            url=f"/?token={session_token}&name={profile.name}",
             status_code=status.HTTP_302_FOUND,
         )
     except Exception as exc:
