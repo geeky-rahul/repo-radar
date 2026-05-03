@@ -1909,10 +1909,46 @@
                 return;
             }
 
-            // Hide the hero and original nav elements to focus on the dashboard layout
-            document.querySelector('.nav').style.display = 'none';
-            document.querySelector('.hero').style.display = 'none';
+            // Keep the hero and original nav elements visible
+            document.querySelector('.nav').style.display = 'flex';
+            document.querySelector('.hero').style.display = 'grid';
             if (appShellHeader) appShellHeader.style.display = 'none';
+
+            // Add small avatar to nav-actions
+            const navAvatar = document.createElement('div');
+            navAvatar.className = 'avatar';
+            navAvatar.style.cursor = 'pointer';
+            navAvatar.title = userProfile.name || userProfile.email || 'Profile';
+
+            if (userProfile.avatar_url) {
+                const img = document.createElement('img');
+                img.src = userProfile.avatar_url;
+                img.alt = userProfile.name || '';
+                img.style.width = '40px';
+                img.style.height = '40px';
+                img.style.borderRadius = '999px';
+                img.style.objectFit = 'cover';
+                navAvatar.appendChild(img);
+            } else {
+                const initials = (userProfile.name || userProfile.email || 'U').split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase();
+                navAvatar.textContent = initials;
+                navAvatar.style.display = 'flex';
+                navAvatar.style.alignItems = 'center';
+                navAvatar.style.justifyContent = 'center';
+                navAvatar.style.width = '40px';
+                navAvatar.style.height = '40px';
+                navAvatar.style.borderRadius = '999px';
+                navAvatar.style.background = '#0f1724';
+                navAvatar.style.color = '#fff';
+            }
+            
+            navAvatar.addEventListener('click', () => {
+                const dashboard = document.getElementById('profileDashboard');
+                if (dashboard) {
+                    dashboard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+            navActions.appendChild(navAvatar);
 
             const dashboard = document.createElement('div');
             dashboard.id = 'profileDashboard';
