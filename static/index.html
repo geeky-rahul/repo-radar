@@ -185,6 +185,7 @@
 
         .results-grid {
             display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
         }
 
@@ -195,11 +196,101 @@
             padding: 20px;
             transition: all 0.3s ease;
             cursor: pointer;
+            position: relative;
         }
 
         .repo-card:hover {
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transform: translateY(-2px);
+        }
+
+        .repo-details {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.4s ease, margin-top 0.4s ease;
+        }
+        
+        .repo-card.expanded .repo-details {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 15px;
+            border-top: 1px solid #e1e5e9;
+            padding-top: 15px;
+        }
+        
+        .repo-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 13px;
+        }
+        
+        .repo-detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .repo-detail-label {
+            font-weight: 600;
+            color: #586069;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .btn-actions {
+            display: flex;
+            gap: 5px;
+            position: relative;
+        }
+
+        .collection-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 10px;
+            width: 250px;
+            z-index: 10;
+            display: none;
+            margin-top: 5px;
+            cursor: default;
+        }
+        
+        .collection-dropdown.show {
+            display: block;
+        }
+        
+        .collection-item {
+            padding: 8px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+        
+        .collection-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .new-collection-form {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .new-collection-input {
+            flex: 1;
+            padding: 5px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 12px;
         }
 
         .repo-header {
@@ -471,6 +562,7 @@
         // Global state
         let userToken = localStorage.getItem('userToken');
         let userProfile = null;
+        let userCollections = [];
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
@@ -597,6 +689,7 @@
                 });
                 if (collectionsResponse.ok) {
                     const collections = await collectionsResponse.json();
+                    userCollections = collections;
                     displayCollections(collections);
                 }
             } catch (error) {
@@ -754,11 +847,15 @@
 
             container.innerHTML = `
                 <div class="results-grid">
-                    ${results.map(repo => `
-                        <div class="repo-card" onclick="openRepo('${repo.html_url}')">
+                    ${results.map(repo => {
+                        const topicsHtml = (repo.topics || []).slice(0, 3).map(t => `<span style="background:#f1f8ff;color:#0366d6;padding:2px 8px;border-radius:12px;font-size:11px;">${t}</span>`).join(' ');
+                        const collectionsHtml = userCollections.map(c => `<div class="collection-item" onclick="addToCollection(event, '${c.id}', '${repo.id}', '${repo.name}', '${repo.owner.login}')">${c.name}</div>`).join('');
+                        
+                        return `
+                        <div class="repo-card" onclick="toggleRepoDetails(event, this)">
                             <div class="repo-header">
                                 <div>
-                                    <a href="${repo.html_url}" class="repo-title" target="_blank">
+                                    <a href="${repo.html_url}" class="repo-title" target="_blank" onclick="event.stopPropagation()">
                                         ${repo.owner.login}/${repo.name}
                                     </a>
                                     <div class="repo-stats">
@@ -767,15 +864,51 @@
                                         ${repo.language ? `<span>💻 ${repo.language}</span>` : ''}
                                     </div>
                                 </div>
-                                ${userToken ? `<button class="btn-small" onclick="addToFavorites(event, '${repo.id}', '${repo.name}', '${repo.owner.login}')">❤️ Add to Favorites</button>` : ''}
+                                ${userToken ? `
+                                <div class="btn-actions">
+                                    <button class="btn-small" onclick="addToFavorites(event, '${repo.id}', '${repo.name}', '${repo.owner.login}')">❤️</button>
+                                    <div style="position:relative;">
+                                        <button class="btn-small" onclick="toggleCollectionDropdown(event, this)">📁 Add</button>
+                                        <div class="collection-dropdown" onclick="event.stopPropagation()">
+                                            <div style="font-weight:600;margin-bottom:8px;font-size:13px;color:#586069;">Save to Collection</div>
+                                            <div class="existing-collections">${collectionsHtml || '<div style="font-size:12px;color:#666;">No collections yet</div>'}</div>
+                                            <div class="new-collection-form">
+                                                <input type="text" class="new-collection-input" placeholder="New collection name..." onkeydown="if(event.key==='Enter') createNewCollectionAndAdd(event, this, '${repo.id}', '${repo.name}', '${repo.owner.login}')">
+                                                <button class="btn-small" onclick="createNewCollectionAndAdd(event, this.previousElementSibling, '${repo.id}', '${repo.name}', '${repo.owner.login}')">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : ''}
                             </div>
                             ${repo.description ? `<p class="repo-description">${repo.description}</p>` : ''}
+                            ${topicsHtml ? `<div style="margin-bottom:10px;display:flex;gap:5px;flex-wrap:wrap;">${topicsHtml}</div>` : ''}
                             <div class="repo-meta">
                                 <span>Updated ${new Date(repo.updated_at).toLocaleDateString()}</span>
                                 ${repo.archived ? '<span class="archived">📁 Archived</span>' : ''}
                             </div>
+                            <div class="repo-details" onclick="event.stopPropagation()">
+                                <div class="repo-details-grid">
+                                    <div class="repo-detail-item">
+                                        <span class="repo-detail-label">Open Issues</span>
+                                        <span>${repo.open_issues_count || 0}</span>
+                                    </div>
+                                    <div class="repo-detail-item">
+                                        <span class="repo-detail-label">License</span>
+                                        <span>${repo.license_name || 'None'}</span>
+                                    </div>
+                                    <div class="repo-detail-item">
+                                        <span class="repo-detail-label">Created</span>
+                                        <span>${repo.created_at ? new Date(repo.created_at).toLocaleDateString() : 'Unknown'}</span>
+                                    </div>
+                                    <div class="repo-detail-item">
+                                        <span class="repo-detail-label">Actions</span>
+                                        <a href="${repo.html_url}" target="_blank" class="btn-small" style="text-align:center;text-decoration:none;display:inline-block;width:fit-content;">View on GitHub</a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    `).join('')}
+                        `}).join('')}
                 </div>
             `;
 
@@ -831,6 +964,85 @@
                 }
             } catch (error) {
                 console.error('Failed to remove favorite:', error);
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            document.querySelectorAll('.collection-dropdown.show').forEach(dropdown => {
+                if (!event.target.closest('.btn-actions')) {
+                    dropdown.classList.remove('show');
+                }
+            });
+        });
+
+        function toggleRepoDetails(event, element) {
+            if (event.target.closest('a') || event.target.closest('button')) return;
+            element.classList.toggle('expanded');
+        }
+
+        function toggleCollectionDropdown(event, button) {
+            event.stopPropagation();
+            // Close all others first
+            document.querySelectorAll('.collection-dropdown.show').forEach(d => {
+                if (d !== button.nextElementSibling) d.classList.remove('show');
+            });
+            const dropdown = button.nextElementSibling;
+            dropdown.classList.toggle('show');
+        }
+
+        async function addToCollection(event, collectionId, repoId, repoName, ownerLogin) {
+            event.stopPropagation();
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/user/collections/${collectionId}/add-repo?repo_id=${repoId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+                if (response.ok) {
+                    alert('Added to collection!');
+                    event.target.closest('.collection-dropdown').classList.remove('show');
+                } else {
+                    alert('Failed to add to collection.');
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function createNewCollectionAndAdd(event, inputEl, repoId, repoName, ownerLogin) {
+            event.stopPropagation();
+            const name = inputEl.value.trim();
+            if (!name) return;
+            try {
+                const createRes = await fetch(`${API_BASE}/api/v1/users/collections`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: name, description: '' })
+                });
+                if (createRes.ok) {
+                    const newCollection = await createRes.json();
+                    userCollections.push(newCollection);
+                    loadUserData();
+                    
+                    const addRes = await fetch(`${API_BASE}/api/v1/user/collections/${newCollection.id}/add-repo?repo_id=${repoId}`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${userToken}` }
+                    });
+                    if (addRes.ok) {
+                        alert(`Created "${name}" and added repo!`);
+                        inputEl.closest('.collection-dropdown').classList.remove('show');
+                        inputEl.value = '';
+                    } else {
+                        alert('Created collection but failed to add repo.');
+                    }
+                } else {
+                    alert('Failed to create collection.');
+                }
+            } catch(e) {
+                console.error(e);
             }
         }
 
