@@ -1410,6 +1410,41 @@
             font-size: 1.1rem;
         }
 
+        .profile-content-area {
+            padding: 0 24px;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, padding 0.4s ease;
+        }
+
+        .profile-content-area.expanded {
+            max-height: 600px;
+            opacity: 1;
+            padding: 16px 24px 24px;
+            overflow-y: auto;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .profile-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .profile-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .profile-list li:last-child {
+            border-bottom: none;
+        }
+
+
 
         @media (prefers-reduced-motion: reduce) {
 
@@ -2156,6 +2191,7 @@
                     <button class="profile-tab" data-tab="collections"><span class="icon">📁</span> Collections</button>
                     <button class="profile-tab" data-tab="recommendations"><span class="icon">💡</span> Recommendations</button>
                 </div>
+                <div class="profile-content-area" id="profileContentArea"></div>
             `;
 
             appShell.insertBefore(dashboard, appShell.firstChild);
@@ -2168,53 +2204,71 @@
                 resetSearchState();
             });
 
-            // Wire up the tabs to open the modal (for now, until full views are built)
+            // Wire up the tabs to render inline content
             const tabs = dashboard.querySelectorAll('.profile-tab');
             tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
+                tab.addEventListener('click', async () => {
                     tabs.forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
 
                     const tabId = tab.dataset.tab;
+                    const contentArea = document.getElementById('profileContentArea');
+                    
                     if (tabId === 'search') {
-                        closeModal();
-                    } else if (tabId === 'favorites') {
-                        openProfileModal('favorites');
-                    } else if (tabId === 'collections') {
-                        openProfileModal('collections');
-                    } else if (tabId === 'recommendations') {
-                        openProfileModal('recommendations');
+                        contentArea.classList.remove('expanded');
+                        setTimeout(() => { contentArea.innerHTML = ''; }, 400); // Wait for transition
+                    } else {
+                        contentArea.innerHTML = '<div style="padding: 20px; text-align: center;"><div class="spinner" aria-hidden="true" style="display: inline-block;"></div></div>';
+                        contentArea.classList.add('expanded');
+                        await renderProfileTabContent(tabId);
                     }
                 });
             });
         }
 
-        async function openProfileModal(section = 'profile') {
-            let html = `<h3>${escapeHtml(userProfile.name || userProfile.email)}</h3><p>${escapeHtml(userProfile.email || '')}</p>`;
+        async function renderProfileTabContent(section) {
+            const contentArea = document.getElementById('profileContentArea');
+            if (!contentArea) return;
+            
+            let html = '';
+            
             if (section === 'favorites') {
                 const res = await fetchWithAuth('/api/v1/user/favorites');
                 const favs = res.ok ? await res.json() : [];
-                html += `<h4>Favorites</h4><ul>` + (favs.map(r => `<li>${escapeHtml(r.full_name)} <button data-id="${r.id}" class="remove-fav">Remove</button></li>`).join('') || '<li>No favorites yet</li>') + `</ul>`;
+                html += `<h4 style="margin-top: 0; color: #fff;">Favorites</h4><ul class="profile-list">` + 
+                    (favs.length > 0 ? favs.map(r => `<li><span>${escapeHtml(r.full_name)}</span> <button data-id="${r.id}" class="secondary-btn remove-fav" style="padding: 6px 12px; min-height: auto; font-size: 0.8rem;">Remove</button></li>`).join('') : '<li><span style="color: var(--muted);">No favorites yet</span></li>') + 
+                    `</ul>`;
+            } else if (section === 'saved-searches') {
+                const res = await fetchWithAuth('/api/v1/user/saved-searches');
+                const searches = res.ok ? await res.json() : [];
+                html += `<h4 style="margin-top: 0; color: #fff;">Saved Searches</h4><ul class="profile-list">` + 
+                    (searches.length > 0 ? searches.map(s => `<li><span>${escapeHtml(s.name)} <small style="color: var(--muted);">(${escapeHtml(s.query)})</small></span></li>`).join('') : '<li><span style="color: var(--muted);">No saved searches yet</span></li>') + 
+                    `</ul>`;
             } else if (section === 'collections') {
                 const res = await fetchWithAuth('/api/v1/user/collections');
                 const cols = res.ok ? await res.json() : [];
-                html += `<h4>Collections</h4><ul>` + (cols.map(c => `<li>${escapeHtml(c.name)} (${(c.repo_ids || []).length})</li>`).join('') || '<li>No collections yet</li>') + `</ul>`;
+                html += `<h4 style="margin-top: 0; color: #fff;">Collections</h4><ul class="profile-list">` + 
+                    (cols.length > 0 ? cols.map(c => `<li><span>${escapeHtml(c.name)} <span class="status-chip" style="margin-left: 8px;">${(c.repo_ids || []).length} repos</span></span></li>`).join('') : '<li><span style="color: var(--muted);">No collections yet</span></li>') + 
+                    `</ul>`;
             } else if (section === 'recommendations') {
                 const res = await fetchWithAuth('/api/v1/user/recommendations');
                 const recs = res.ok ? await res.json() : [];
-                html += `<h4>Recommendations</h4><ul>` + (recs.map(r => `<li>${escapeHtml(r.full_name)}</li>`).join('') || '<li>No recommendations</li>') + `</ul>`;
-            } else {
-                html += `<p>GitHub: ${escapeHtml(userProfile.github_username || 'Not connected')}</p>`;
+                html += `<h4 style="margin-top: 0; color: #fff;">Recommendations</h4><ul class="profile-list">` + 
+                    (recs.length > 0 ? recs.map(r => `<li><a href="${escapeHtml(r.html_url)}" target="_blank" style="color: var(--accent);">${escapeHtml(r.full_name)}</a></li>`).join('') : '<li><span style="color: var(--muted);">No recommendations at this time</span></li>') + 
+                    `</ul>`;
             }
 
-            showModal(html);
+            contentArea.innerHTML = html;
 
-            document.querySelectorAll('.remove-fav').forEach(btn => btn.addEventListener('click', async (e) => {
+            contentArea.querySelectorAll('.remove-fav').forEach(btn => btn.addEventListener('click', async (e) => {
                 const id = btn.dataset.id;
                 const res = await fetchWithAuth(`/api/v1/user/favorites/${id}`, { method: 'DELETE' });
                 if (res.ok) {
-                    btn.parentElement.remove();
+                    btn.closest('li').remove();
                     userFavorites.delete(String(id));
+                    if (contentArea.querySelectorAll('.profile-list li').length === 0) {
+                        contentArea.querySelector('.profile-list').innerHTML = '<li><span style="color: var(--muted);">No favorites yet</span></li>';
+                    }
                 }
             }));
         }
