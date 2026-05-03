@@ -18,6 +18,12 @@ Search Form:
 ├── Pushed After Date (optional - YYYY-MM-DD)
 ├── Results Count (1-30, default 10)
 └── Buttons: [Search] [Reset]
+
+### Landing Page Trending Section
+Located below the search interface:
+- **Horizontal Carousel**: Auto-sliding display of currently trending repositories.
+- **Data**: Shows repos pushed in the last 7 days with >50 stars.
+- **Interaction**: Pauses on hover, scrollable horizontally.
 ```
 
 ---
@@ -320,6 +326,7 @@ GET /api/v1/users/recommendations
 | Run Saved | Saved Searches Tab | ✅ Working | Click [Run Search] button |
 | Collections | Collections Tab | ✅ Working | Create + add repos |
 | Recommendations | Recommendations Tab | ✅ Working | Click tab to see suggestions |
+| Trending Repos | Homepage (Below Search) | ✅ Working | View auto-sliding carousel |
 | User Profile | Dashboard Header | ✅ Working | Visible in top section |
 | Logout | Dashboard Header | ✅ Working | Click [LOGOUT] button |
 

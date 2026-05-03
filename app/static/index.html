@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RepoSearch | GitHub Repository Search</title>
+    <title>RepoRadar | AI-Powered GitHub Search</title>
     <style>
         :root {
             color-scheme: dark;
@@ -313,6 +313,36 @@
             border-radius: 999px;
             display: inline-block;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .carousel-container {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            gap: 20px;
+            padding-bottom: 20px;
+            margin-top: 20px;
+        }
+        .carousel-container::-webkit-scrollbar {
+            display: none;
+        }
+        .carousel-item {
+            flex: 0 0 auto;
+            width: 340px;
+            scroll-snap-align: start;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .carousel-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 32px rgba(2, 6, 23, 0.4);
         }
 
         .hero-proof {
@@ -1793,7 +1823,7 @@
 
                     <div class="error" id="trendingError" role="alert" style="display: none; margin: 20px 0;"></div>
 
-                    <div class="results-grid is-hidden" id="trendingList"></div>
+                    <div class="carousel-container is-hidden" id="trendingList"></div>
                 </div>
             </section>
         </main>
@@ -2359,17 +2389,17 @@
             const list = document.getElementById('trendingList');
 
             try {
-                const res = await fetch('/api/v1/search/rising?top_k=3');
+                const res = await fetch('/api/v1/trending/repositories?top_k=10');
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
                 if (loading) loading.style.display = 'none';
 
                 if (!data.results || data.results.length === 0) {
-                    if (list) list.innerHTML = '<div class="empty-panel"><p>No trending repositories found.</p></div>';
+                    if (list) list.innerHTML = '<div class="empty-panel"><p>No trending repositories available at the moment.</p></div>';
                 } else {
                     if (list) list.innerHTML = data.results.map((repo) => `
-                        <article class="repo-card">
+                        <article class="repo-card carousel-item">
                             <div class="repo-card-head">
                                 <div>
                                     <div class="repo-title">
@@ -2394,6 +2424,30 @@
                     `).join('');
                 }
                 if (list) list.classList.remove('is-hidden');
+                
+                // Initialize auto-sliding carousel
+                let autoSlideInterval;
+                const startSlide = () => {
+                    autoSlideInterval = setInterval(() => {
+                        if (list) {
+                            if (list.scrollLeft + list.clientWidth >= list.scrollWidth - 10) {
+                                list.scrollTo({ left: 0, behavior: 'smooth' });
+                            } else {
+                                list.scrollBy({ left: 360, behavior: 'smooth' });
+                            }
+                        }
+                    }, 3500);
+                };
+                
+                startSlide();
+                
+                if (list) {
+                    list.addEventListener('mouseenter', () => clearInterval(autoSlideInterval));
+                    list.addEventListener('mouseleave', startSlide);
+                    list.addEventListener('touchstart', () => clearInterval(autoSlideInterval), {passive: true});
+                    list.addEventListener('touchend', startSlide, {passive: true});
+                }
+                
             } catch (err) {
                 if (loading) loading.style.display = 'none';
                 if (error) {
@@ -2405,6 +2459,7 @@
 
         function bootstrap() {
             handleOAuthCallback();
+            loadTrending();
             // initialize auth state and UI
             loadProfileIfAuthenticated().then(() => {
                 // render avatar or sign-in button

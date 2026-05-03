@@ -165,22 +165,17 @@ uvicorn app.main:app --reload
 | 502 | `GITHUB_API_ERROR` | GitHub API returned an error |
 | 500 | `INTERNAL_ERROR` | Unexpected server error |
 
-## Rising Projects
+## Trending Repositories
 
-This feature surfaces trending repositories using recent star growth, forks momentum, and contributor activity.
+This feature surfaces trending repositories using recent star momentum, forks, and contributor activity.
 
-- Today / Weekly trending repos
-- Based on: stars gained in last 24h / 7 days, forks growth, contributor activity
-- ⚙️ How: store previous star counts in Redis / DB
-- Calculate trend score as:
-
-```text
-trend_score = stars_today - stars_yesterday
-```
+- Live trending feed with auto-sliding carousel on the dashboard
+- Based on: repositories pushed within the last 7 days with >50 stars, ranked by our composite scoring algorithm
+- ⚙️ How: Cached via Redis for 15 minutes to reduce GitHub API load
 
 New endpoint:
 
-- `GET /api/v1/search/rising` — fetch rising projects ranked by recent star momentum
+- `GET /api/v1/trending/repositories` — fetch trending projects ranked by momentum
 
 ### User account features
 

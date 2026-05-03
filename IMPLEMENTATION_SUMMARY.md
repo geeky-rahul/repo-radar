@@ -35,7 +35,14 @@ Your GitHub Search API now has a **complete, production-ready user dashboard** w
    - Topics/tags
    - Relevance score (0-100%)
 
-### 3. **User Dashboard (After Login) with:**
+### 3. **Trending Repositories Carousel**
+   ✅ **Implemented (On landing page)**
+   - Auto-sliding horizontal carousel displaying currently trending repositories
+   - Backed by custom algorithm scoring recently pushed repos with high stars
+   - Intelligent caching using Redis for optimal API limit usage
+   - Smooth pause-on-hover interaction
+
+### 4. **User Dashboard (After Login) with:**
 
 #### **A) ❤️ Favorite Repositories Management**
    ✅ **Fully Implemented**
@@ -311,6 +318,7 @@ POST /api/v1/search/repositories             - Search repositories
 Your application now has:
 - ✅ Beautiful landing page with Google Sign-in
 - ✅ Advanced search interface with filters
+- ✅ Trending repositories auto-sliding carousel
 - ✅ Complete user dashboard after login
 - ✅ Favorites management
 - ✅ Saved searches storage
