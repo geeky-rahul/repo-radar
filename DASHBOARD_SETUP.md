@@ -102,6 +102,14 @@ To get personalized recommendations, add your GitHub personal access token:
 3. Add to `.env`:
    ```env
    GITHUB_TOKEN=your_github_token_here
+   
+   # Google OAuth (Required for Google Login)
+   GOOGLE_OAUTH_CLIENT_ID=your_google_client_id
+   GOOGLE_OAUTH_CLIENT_SECRET=your_google_client_secret
+   
+   # GitHub OAuth (Required for GitHub Login)
+   GITHUB_OAUTH_CLIENT_ID=your_github_oauth_client_id
+   GITHUB_OAUTH_CLIENT_SECRET=your_github_oauth_client_secret
    ```
 
 ---
@@ -109,8 +117,9 @@ To get personalized recommendations, add your GitHub personal access token:
 ## 🎯 Features by Endpoint
 
 ### Authentication
-- `GET /api/v1/users/auth/config` - Get OAuth client ID
-- `GET /api/v1/users/auth/callback` - OAuth callback handler
+- `GET /api/v1/users/auth/config` - Get OAuth client IDs (Google & GitHub)
+- `GET /api/v1/users/auth/callback` - Google OAuth callback handler
+- `GET /api/v1/users/auth/github/callback` - GitHub OAuth callback handler
 - `POST /api/v1/users/auth/google` - Google login endpoint
 
 ### User Profile
